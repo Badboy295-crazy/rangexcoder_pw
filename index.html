@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RangeXCoder - Core Study Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --font-poppins: "Poppins", sans-serif;
+            --font-inter: "Inter", sans-serif;
+        }
+        body {
+            background-color: #0b111e;
+            color: #f3f4f6;
+            font-family: var(--font-inter);
+            margin: 0;
+            padding: 0;
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0b111e; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        
+        .pw-card {
+            background-color: #111827;
+            border: 1px solid #1f293d;
+            border-radius: 12px;
+            transition: all 0.2s ease-in-out;
+        }
+        .pw-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(59,130,246,0.25);
+        }
+        .subtab-active {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <header class="bg-[#111827] border-b border-[#1f293d] px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+        <div class="flex items-center space-x-4">
+            <button id="globalBackBtn" class="bg-[#1f293d] hover:bg-[#1e293b] text-gray-200 text-xs font-bold px-4 py-2 rounded-lg border border-[#1f293d] transition cursor-pointer flex items-center hidden">
+                <i class="fa-solid fa-arrow-left mr-2"></i>Back
+            </button>
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-base shadow-md">RX</div>
+                <span class="text-xl font-black tracking-tight text-white font-poppins">RangeXCoder</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="text-[11px] font-bold text-[#3b82f6] bg-[#3b82f6]/10 px-3 py-1.5 rounded-full border border-[#3b82f6]/20 flex items-center">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6] animate-pulse mr-2"></span>Engine Direct Tunnel Active
+            </span>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6" id="mainContent">
+
+        <div id="viewAllBatches" class="space-y-6 app-screen">
+            <div class="bg-[#111827] p-5 rounded-xl border border-[#1f293d] space-y-4 shadow-sm">
+                <h2 class="text-lg font-bold text-white font-poppins">My Batches Catalogs</h2>
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-500 text-sm"></i>
+                    <input type="text" id="batchSearchBar" placeholder="Search your structural batch nodes..." class="w-full bg-[#0b111e] border border-[#1f293d] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#3b82f6] text-white transition placeholder-gray-500 font-medium">
+                </div>
+            </div>
+
+            <div id="batchesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+            
+            <div id="paginationLoaderArea" class="flex justify-center pt-2">
+                <button id="btnLoadMoreBatches" class="bg-[#111827] hover:bg-[#1f293d] text-gray-300 font-bold text-xs px-6 py-3 rounded-lg border border-[#1f293d] transition cursor-pointer">
+                    Load More Batches <i class="fa-solid fa-arrow-down ml-1.5"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="viewBatchInternal" class="app-screen hidden space-y-5">
+            <div class="bg-[#111827] p-5 rounded-xl border border-[#1f293d]">
+                <h2 class="text-xl font-bold text-white font-poppins" id="internalBatchTitle">Subjects Directories</h2>
+                <p class="text-xs text-gray-400 mt-1">Select structured parameters to check subject catalogs.</p>
+            </div>
+            <div id="subjectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+
+        <div id="viewSubjectTopics" class="space-y-4 app-screen hidden">
+            <div class="bg-[#111827] p-4 rounded-xl border border-[#1f293d]">
+                <h2 class="text-lg font-bold text-white font-poppins" id="topicsHeaderTitle">Chapters Structure Index</h2>
+            </div>
+            <div id="topicsFolderGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+        <div id="viewTopicTabs" class="space-y-5 app-screen hidden">
+            <div class="bg-[#111827] p-4 rounded-xl border border-[#1f293d]">
+                <h2 class="text-base font-bold text-white px-1 mb-4 font-poppins" id="topicTabsMainTitle">Chapter Resource Modules</h2>
+                <div class="flex flex-wrap gap-2 text-center">
+                    <button data-type="videos" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px] subtab-active">Lectures</button>
+                    <button data-type="notes" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px]">Notes</button>
+                    <button data-type="DppNotes" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px]">DPP PDF</button>
+                    <button data-type="DppVideos" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px]">DPP Video</button>
+                    <button data-type="DppQuiz" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px]">DPP Quiz</button>
+                </div>
+            </div>
+            <div id="tabContentDisplayGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+
+        <div id="viewTheatricalPlayer" class="absolute inset-0 bg-black z-50 flex flex-col hidden app-screen">
+            <div class="bg-[#111827] border-b border-[#1f293d] px-4 py-3 flex items-center justify-between shrink-0">
+                <button id="closePlayerBtn" class="text-white hover:text-red-400 font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition">
+                    <i class="fa-solid fa-arrow-left text-sm"></i> <span>Close Arena</span>
+                </button>
+                <h3 id="playerLectureTitleHeader" class="text-xs font-medium text-gray-300 truncate max-w-md px-2">Streaming Track Asset...</h3>
+                <button id="toggleSlidesViewBtn" class="bg-[#1f293d] border border-[#2d3748] text-[#3b82f6] px-3 py-1.5 rounded-md text-xs font-bold hover:bg-[#2d3748] transition cursor-pointer">
+                    <i class="fa-solid fa-chalkboard-user mr-1"></i>Whiteboard Index
+                </button>
+            </div>
+
+            <div class="flex-1 flex overflow-hidden relative bg-black">
+                <div class="flex-1 h-full flex items-center justify-center relative" id="videoViewportContainer">
+                    <video id="nativeVideoPlayer" class="w-full h-full" controls autoplay playsinline></video>
+                </div>
+                
+                <div id="slidesDrawer" class="w-0 bg-[#111827] border-l border-transparent h-full flex flex-col overflow-y-auto transition-all duration-200 shrink-0">
+                    <div class="p-3 border-b border-[#1f293d] bg-[#0b111e] text-center">
+                        <span class="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Slide Timestamps</span>
+                    </div>
+                    <div id="slidesListContainer" class="p-3 space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="hidden py-12 text-center flex flex-col items-center justify-center space-y-2">
+            <div class="w-6 h-6 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hydrating API Tunnel Grid...</p>
+        </div>
+
+    </main>
+
+    <script>
+        let activeScreenId = "batches";
+        let previousScreensStack = [];
+        let currentActiveBatchId = "";
+        let currentActiveSubjectSlug = "";
+        let currentActiveTopicSlug = "";
+        let currentActiveContentTypeTab = "videos";
+        let shakaPlayerInstanceInstance = null;
+        let isSlidesDrawerOpen = false;
+        
+        let currentBatchesPage = 1;
+        let activeSearchQueryString = "";
+        let globalDebounceSearchTimer = null;
+
+        const LOCAL_SERVER_ROOT = window.location.origin;
+
+        const gridBatches = document.getElementById('batchesGrid');
+        const gridSubjects = document.getElementById('subjectsGrid');
+        const gridFolderTopics = document.getElementById('topicsFolderGrid');
+        const displayTabSlot = document.getElementById('tabContentDisplayGrid');
+        const slidesListContainer = document.getElementById('slidesListContainer');
+        const elementLoading = document.getElementById('loadingIndicator');
+        const btnGlobalBack = document.getElementById('globalBackBtn');
+        const slidesDrawer = document.getElementById('slidesDrawer');
+        const toggleSlidesViewBtn = document.getElementById('toggleSlidesViewBtn');
+        const batchSearchBar = document.getElementById('batchSearchBar');
+        const btnLoadMoreBatches = document.getElementById('btnLoadMoreBatches');
+
+        function navigateToScreen(screenId, saveHistory = true) {
+            if (saveHistory && activeScreenId !== screenId) previousScreensStack.push(activeScreenId);
+            activeScreenId = screenId;
+            document.querySelectorAll('.app-screen').forEach(el => el.classList.add('hidden'));
+
+            if(screenId === 'batches') document.getElementById('viewAllBatches').classList.remove('hidden');
+            else if(screenId === 'internal-subjects') document.getElementById('viewBatchInternal').classList.remove('hidden');
+            else if(screenId === 'subject-topics') document.getElementById('viewSubjectTopics').classList.remove('hidden');
+            else if(screenId === 'topic-subtabs') document.getElementById('viewTopicTabs').classList.remove('hidden');
+            else if(screenId === 'theatrical-player') document.getElementById('viewTheatricalPlayer').classList.remove('hidden');
+
+            if (screenId === 'theatrical-player') btnGlobalBack.classList.add('hidden');
+            else if (previousScreensStack.length > 0) btnGlobalBack.classList.remove('hidden');
+            else btnGlobalBack.classList.add('hidden');
+        }
+
+        btnGlobalBack.addEventListener('click', () => {
+            if (previousScreensStack.length > 0) {
+                const prev = previousScreensStack.pop();
+                navigateToScreen(prev, false);
+            }
+        });
+
+        async function loadMainBatchesData(appendMode = false) {
+            if (!appendMode) { gridBatches.innerHTML = ''; currentBatchesPage = 1; }
+            elementLoading.classList.remove('hidden');
+            
+            let targetApiUrl = `${LOCAL_SERVER_ROOT}/api/v1/batches/my-batches?page=${currentBatchesPage}`;
+            if(activeSearchQueryString.trim() !== "") {
+                targetApiUrl = `${LOCAL_SERVER_ROOT}/api/v1/batches/search?name=${encodeURIComponent(activeSearchQueryString)}&page=${currentBatchesPage}`;
+            }
+
+            try {
+                const res = await fetch(targetApiUrl);
+                const json = await res.json();
+                const itemsArray = json.data?.batches || json.data || [];
+                if(itemsArray.length > 0) {
+                    renderBatchCardsToGrid(itemsArray, appendMode);
+                    if(itemsArray.length < 9) btnLoadMoreBatches.classList.add('hidden');
+                    else btnLoadMoreBatches.classList.remove('hidden');
+                } else {
+                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online batch items synchronized inside ecosystem.</p>`;
+                    btnLoadMoreBatches.classList.add('hidden');
+                }
+            } catch(e) {
+                console.error(e);
+            } finally { elementLoading.classList.add('hidden'); }
+        }
+
+        btnLoadMoreBatches.addEventListener('click', () => {
+            currentBatchesPage++;
+            loadMainBatchesData(true);
+        });
+
+        batchSearchBar.addEventListener('input', (e) => {
+            clearTimeout(globalDebounceSearchTimer);
+            activeSearchQueryString = e.target.value;
+            globalDebounceSearchTimer = setTimeout(() => {
+                currentBatchesPage = 1;
+                loadMainBatchesData(false);
+            }, 300);
+        });
+
+        function renderBatchCardsToGrid(batchesArray, appendMode = false) {
+            const htmlString = batchesArray.map(b => {
+                const exactId = b._id || b.batchId;
+                return `
+                    <div class="pw-card p-4 flex flex-col justify-between relative">
+                        <div class="w-full h-44 bg-[#0b111e] rounded-lg overflow-hidden mb-3 border border-[#1f293d]/40">
+                            <img src="${b.batchImage || b.previewImage || 'https://via.placeholder.com/400x220?text=RangeXCoder+Asset'}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x220?text=RangeXCoder+Stream'">
+                        </div>
+                        <div class="space-y-1 flex-1 flex flex-col justify-between">
+                            <div>
+                                <span class="text-[9px] font-bold uppercase text-[#3b82f6] bg-[#3b82f6]/5 px-2 py-0.5 rounded border border-[#3b82f6]/10 inline-block">${b.language || 'Hinglish'}</span>
+                                <h3 class="text-xs font-bold text-white line-clamp-2 pt-1 font-poppins">${b.batchName || b.name}</h3>
+                            </div>
+                            <button onclick="loadBatchSubjects('${exactId}', '${(b.batchName || b.name).replace(/'/g, "\\'")}')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white font-bold text-[11px] py-2.5 rounded-lg border border-[#2d3748] cursor-pointer transition">
+                                <i class="fa-solid fa-folder-open mr-1.5"></i>Launch Subjects Arena
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (appendMode) gridBatches.insertAdjacentHTML('beforeend', htmlString);
+            else gridBatches.innerHTML = htmlString;
+        }
+
+        async function loadBatchSubjects(batchId, title) {
+            currentActiveBatchId = batchId;
+            elementLoading.classList.remove('hidden');
+            navigateToScreen("internal-subjects");
+            document.getElementById('internalBatchTitle').innerText = title;
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/v1/batches/${batchId}/subjects`);
+                const json = await res.json();
+                const subjects = json.data?.subjects || json.data || [];
+                if(subjects.length > 0) {
+                    gridSubjects.innerHTML = subjects.map(s => {
+                        let resolvedImg = (s.imageId && s.imageId.baseUrl && s.imageId.key) ? (s.imageId.baseUrl + s.imageId.key) : "https://via.placeholder.com/350x200/111827/ffffff?text=Subject+Track";
+                        return `
+                            <div onclick="loadSubjectChapters('${s._id || s.slug}', '${s.subjectName || s.subject.replace(/'/g, "\\'")}')" class="pw-card p-3 flex flex-col justify-between cursor-pointer">
+                                <div class="w-full h-32 bg-[#0b111e] rounded-lg overflow-hidden mb-2.5 border border-[#1f293d]/40">
+                                    <img src="${resolvedImg}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/350x200/111827/ffffff?text=Subject+Track'">
+                                </div>
+                                <h4 class="font-bold text-xs text-white truncate px-0.5 font-poppins">${s.subjectName || s.subject}</h4>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No structural modules populated inside this branch nodes.</p>`;
+                }
+            } catch(e){} finally { elementLoading.classList.add('hidden'); }
+        }
+
+        async function loadSubjectChapters(slug, title) {
+            currentActiveSubjectSlug = slug;
+            elementLoading.classList.remove('hidden');
+            navigateToScreen("subject-topics");
+            document.getElementById('topicsHeaderTitle').innerText = title;
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/v1/batches/${currentActiveBatchId}/subjects/${slug}/topics?page=1`);
+                const json = await res.json();
+                const folders = json.data?.topics || json.data || [];
+                if(folders.length > 0) {
+                    gridFolderTopics.innerHTML = folders.map(t => {
+                        return `
+                            <div onclick="loadTopicTabs('${t._id || t.slug}', '${t.topicName || t.name.replace(/'/g, "\\'")}')" class="bg-[#111827] border border-[#1f293d] hover:border-[#3b82f6]/40 p-4 rounded-xl flex items-center justify-between cursor-pointer transition">
+                                <div class="flex items-center space-x-3 overflow-hidden">
+                                    <i class="fa-solid fa-folder text-amber-500 text-lg shrink-0"></i>
+                                    <span class="font-bold text-xs text-gray-200 truncate font-poppins">${t.topicName || t.name}</span>
+                                </div>
+                                <div class="flex items-center text-[10px] font-bold text-[#3b82f6] bg-[#3b82f6]/5 border border-[#3b82f6]/10 px-2 py-1 rounded">
+                                    <i class="fa-solid fa-layer-group mr-1.5"></i>Check Units
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    gridFolderTopics.innerHTML = `<p class="text-center text-xs text-gray-500 col-span-full py-12">No dynamic topic logs attached to node point.</p>`;
+                }
+            } catch(e){} finally { elementLoading.classList.add('hidden'); }
+        }
+
+        async function loadTopicTabs(slug, name) {
+            currentActiveTopicSlug = slug;
+            elementLoading.classList.remove('hidden');
+            navigateToScreen("topic-subtabs");
+            document.getElementById('topicTabsMainTitle').innerText = name;
+            displayTabSlot.innerHTML = '';
+            
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/v1/batches/${currentActiveBatchId}/subjects/${currentActiveSubjectSlug}/topics/${slug}?contentType=${currentActiveContentTypeTab}&page=1`);
+                const json = await res.json();
+                const array = json.data?.contents || json.data || [];
+                
+                if(array.length > 0) {
+                    if(currentActiveContentTypeTab === "videos" || currentActiveContentTypeTab === "DppVideos") {
+                        displayTabSlot.innerHTML = array.map(item => {
+                            const cleanTitle = item.title || item.topic || 'Untitled Stream Node';
+                            const thumb = item.videoDetails?.image || item.thumbnail || 'https://via.placeholder.com/350x180/0b111e/ffffff?text=Video+Lecture';
+                            return `
+                                <div class="pw-card p-3 flex flex-col justify-between">
+                                    <div class="w-full h-40 rounded-lg overflow-hidden relative bg-[#0b111e] border border-[#1f293d]/50">
+                                        <img src="${thumb}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/350x180/0b111e/ffffff?text=Video+Lecture'">
+                                    </div>
+                                    <h4 class="text-xs font-bold text-gray-200 mt-2.5 line-clamp-2 leading-relaxed font-poppins">${cleanTitle}</h4>
+                                    <button onclick="executeFinalPlaybackStream('${item._id || item.contentId}', '${cleanTitle.replace(/'/g, "\\'")}')" class="w-full mt-3 bg-[#3b82f6] hover:bg-blue-600 text-white py-2.5 rounded-lg text-xs font-bold cursor-pointer transition">
+                                        <i class="fa-solid fa-circle-play mr-1.5"></i>Stream Dynamic Video
+                                    </button>
+                                </div>
+                            `;
+                        }).join('');
+                    } else if(currentActiveContentTypeTab === "DppQuiz") {
+                        displayTabSlot.innerHTML = array.map(q => `
+                            <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex flex-col justify-between">
+                                <h4 class="text-xs font-bold text-gray-200 font-poppins line-clamp-2">${q.title || 'Interactive Evaluation Module'}</h4>
+                                <button onclick="alert('Quiz system operational connection deployed successfully.')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white py-2.5 rounded-lg text-[11px] font-bold transition cursor-pointer">Launch Dynamic MCQ Arena</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        displayTabSlot.innerHTML = array.map(doc => {
+                            const sheetUrl = doc.attachmentSheetsDetails?.attachmentUrl || doc.url || '#';
+                            return `
+                                <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex items-center justify-between">
+                                    <div class="flex items-center space-x-3 overflow-hidden">
+                                        <i class="fa-solid fa-file-pdf text-red-500 text-xl shrink-0"></i>
+                                        <h4 class="text-xs font-bold text-gray-200 truncate font-poppins">${doc.title || doc.topic || 'Document Data Sheet'}</h4>
+                                    </div>
+                                    <button onclick="window.open('${sheetUrl}', '_blank')" class="bg-[#1f293d] hover:bg-[#3b82f6] text-white p-2.5 rounded-lg text-xs transition cursor-pointer shrink-0 ml-2"><i class="fa-solid fa-download"></i></button>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } else {
+                    displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No compiled assets published inside this segment grid channel.</div>`;
+                }
+            } catch(e){} finally { elementLoading.classList.add('hidden'); }
+        }
+
+        document.querySelectorAll('.subtab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('subtab-active'));
+                this.classList.add('subtab-active');
+                currentActiveContentTypeTab = this.getAttribute('data-type');
+                loadTopicTabs(currentActiveTopicSlug, document.getElementById('topicTabsMainTitle').innerText);
+            });
+        });
+
+        async function executeFinalPlaybackStream(contentId, lectureTitle) {
+            navigateToScreen("theatrical-player");
+            document.getElementById('playerLectureTitleHeader').innerText = lectureTitle;
+            
+            isSlidesDrawerOpen = false;
+            slidesDrawer.style.width = "0px";
+            slidesDrawer.style.borderColor = "transparent";
+
+            const video = document.getElementById('nativeVideoPlayer');
+            shaka.polyfill.installAll();
+
+            if(shakaPlayerInstanceInstance) { 
+                await shakaPlayerInstanceInstance.destroy(); 
+                shakaPlayerInstanceInstance = null; 
+            }
+            shakaPlayerInstanceInstance = new shaka.Player(video);
+
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/video-stream?batchId=${currentActiveBatchId}&subjectId=${currentActiveSubjectSlug}&contentId=${contentId}`);
+                const json = await res.json();
+                
+                if(!json.success || !json.data || !json.data.url) throw new Error("Manifest asset interception mapping dropped.");
+
+                let baseManifestTargetUrl = json.data.url + (json.data.signedUrl || "");
+                
+                // Fallback proxy injection if explicit endpoint conversion loop active
+                if(json.data.m3u8_url) {
+                    baseManifestTargetUrl = json.data.m3u8_url;
+                }
+
+                shakaPlayerInstanceInstance.getNetworkingEngine().registerRequestFilter((type, request) => {
+                    if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT && json.data.signedUrl) {
+                        const targetUri = request.uris[0];
+                        if (!targetUri.includes('URLPrefix=')) {
+                            const separator = targetUri.includes('?') ? '&' : '?';
+                            request.uris[0] = targetUri + separator + json.data.signedUrl.replace(/^\?/, '');
+                        }
+                    }
+                });
+
+                await shakaPlayerInstanceInstance.load(baseManifestTargetUrl);
+            } catch(error) {
+                alert("Player Native Framework Link Error: " + error.message);
+            }
+        }
+
+        toggleSlidesViewBtn.addEventListener('click', () => {
+            if (!isSlidesDrawerOpen) {
+                slidesDrawer.style.width = "260px";
+                slidesDrawer.style.borderColor = "#1f293d";
+                toggleSlidesViewBtn.className = "bg-[#3b82f6] text-white px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer";
+                isSlidesDrawerOpen = true;
+            } else {
+                slidesDrawer.style.width = "0px";
+                slidesDrawer.style.borderColor = "transparent";
+                toggleSlidesViewBtn.className = "bg-[#1f293d] border border-[#2d3748] text-[#3b82f6] px-3 py-1.5 rounded-md text-xs font-bold hover:bg-[#2d3748] transition cursor-pointer";
+                isSlidesDrawerOpen = false;
+            }
+        });
+
+        document.getElementById('closePlayerBtn').addEventListener('click', async () => {
+            if (shakaPlayerInstanceInstance) { 
+                await shakaPlayerInstanceInstance.destroy(); 
+                shakaPlayerInstanceInstance = null; 
+            }
+            const video = document.getElementById('nativeVideoPlayer');
+            video.src = "";
+            video.load();
+            navigateToScreen("topic-subtabs");
+        });
+
+        document.addEventListener('DOMContentLoaded', () => { loadMainBatchesData(false); });
+    </script>
+</body>
+</html>
