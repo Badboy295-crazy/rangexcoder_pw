@@ -22,11 +22,23 @@ let isEngineReady = false;
 
 /**
  * COOKIE INJECTION CONFIGURATION VAULT
- * Bhai jab aap Render pe deploy karoge, toh browser se pwthor.live ki cookies 
- * export karke niche is array me daal dena. Iske baad kabhi login nahi mangega.
+ * Yahan aapki cookies bilkul safe hain. SameSite aur Expiration ko automatic fix kar diya gaya hai.
  */
 const backupSessionCookies = [
-    // Example format: { name: "session_token", value: "your_token_value", domain: "pwthor.live" }
+    {
+        "domain": "pwthor.live",
+        "expirationDate": 1787294281.354491,
+        "hostOnly": true,
+        "httpOnly": true,
+        "name": "auth_token",
+        "path": "/",
+        "sameSite": "no_restriction", 
+        "secure": true,
+        "session": false,
+        "storeId": "0",
+        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGUiOiI4ODUzODE3NjUyIiwibmFtZSI6IkFtYmVyIEthc2F1ZGhhbiIsImlhdCI6MTc3OTUxODI4NSwiZXhwIjoxNzg3Mjk0Mjg1fQ.wV224l42kC5AGhfoaRc1kIWpkb0S_v3Gois6dYv-7tE",
+        "id": 1
+    }
 ];
 
 async function initializeRealBrowserEngine() {
@@ -35,7 +47,7 @@ async function initializeRealBrowserEngine() {
     
     try {
         globalBrowser = await puppeteer.launch({
-            headless: true, // Deploying to render require true mode setup
+            headless: true, // Deploying to render requires true mode setup
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
@@ -50,10 +62,25 @@ async function initializeRealBrowserEngine() {
         globalPage = pages.length > 0 ? pages[0] : await globalBrowser.newPage();
         await globalPage.setUserAgent(savedUserAgent);
         
-        // Injecting fallback persistent session tokens if present
+        // Injecting fallback persistent session tokens with automatic cleanup schema mapping
         if(backupSessionCookies.length > 0) {
-            console.log("[RangeXCoder Engine] Injecting secure authentication cookie vault channels...");
-            await globalPage.setCookie(...backupSessionCookies.map(c => ({ ...c, domain: 'pwthor.live' })));
+            console.log("[RangeXCoder Engine] Sanitizing and injecting cookie vault channels...");
+            
+            const sanitizedCookies = backupSessionCookies.map(c => {
+                // 'no_restriction' ko standard 'None' me convert kar rahe hain aur expiration fix kar rahe hain
+                return {
+                    name: c.name,
+                    value: c.value,
+                    domain: '.pwthor.live', // Dot lagane se saare subdomains par kaam karega
+                    path: c.path || '/',
+                    httpOnly: c.httpOnly ?? true,
+                    secure: c.secure ?? true,
+                    sameSite: c.sameSite === 'no_restriction' ? 'None' : (c.sameSite || 'Lax'),
+                    expires: c.expires || c.expirationDate || Math.floor(Date.now() / 1000) + 31536000
+                };
+            });
+
+            await globalPage.setCookie(...sanitizedCookies);
         }
 
         console.log("[RangeXCoder Engine] Verifying portal communication tunnel...");
