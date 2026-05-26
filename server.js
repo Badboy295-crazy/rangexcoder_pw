@@ -12,18 +12,21 @@ app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-// Serve Static Frontend Layout directly
+// Static files setup
 app.use(express.static(path.join(__dirname)));
+
+// =========================================================================
+// FIXED: HOMEPAGE ROUTER (Iske bina link kholne par Not Found aa raha tha)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+// =========================================================================
 
 const savedUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 let globalBrowser = null;
 let globalPage = null;
-let isEngineReady = false;
 
-/**
- * COOKIE INJECTION CONFIGURATION VAULT
- * Yahan aapki cookies bilkul safe hain. SameSite aur Expiration ko automatic fix kar diya gaya hai.
- */
+// Cookie Matrix Session Vault (Aapki active cookie yahan safe hai)
 const backupSessionCookies = [
     {
         "domain": "pwthor.live",
@@ -32,7 +35,7 @@ const backupSessionCookies = [
         "httpOnly": true,
         "name": "auth_token",
         "path": "/",
-        "sameSite": "no_restriction", 
+        "sameSite": "no_restriction",
         "secure": true,
         "session": false,
         "storeId": "0",
@@ -41,59 +44,51 @@ const backupSessionCookies = [
     }
 ];
 
-async function initializeRealBrowserEngine() {
-    console.log("[RangeXCoder Engine] Initializing headless sandbox cloaking layer...");
-    isEngineReady = false;
-    
-    try {
+async function getSafeActivePage() {
+    if (!globalBrowser || !globalBrowser.isConnected()) {
+        console.log("[RangeXCoder Engine] Launching global native system Chromium branch...");
         globalBrowser = await puppeteer.launch({
-            headless: true, // Deploying to render requires true mode setup
+            headless: true,
+            executablePath: puppeteer.executablePath(),
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
                 '--disable-blink-features=AutomationControlled',
-                '--start-maximized',
                 '--disable-dev-shm-usage',
-                '--no-zygote'
+                '--disable-gpu',
+                '--no-zygote',
+                '--single-process',
+                '--disable-web-security'
             ]
         });
+        globalPage = null; 
+    }
 
+    if (!globalPage || globalPage.isClosed()) {
         const pages = await globalBrowser.pages();
         globalPage = pages.length > 0 ? pages[0] : await globalBrowser.newPage();
         await globalPage.setUserAgent(savedUserAgent);
         
-        // Injecting fallback persistent session tokens with automatic cleanup schema mapping
+        await globalPage.goto(TARGET_ROOT, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+        
         if(backupSessionCookies.length > 0) {
-            console.log("[RangeXCoder Engine] Sanitizing and injecting cookie vault channels...");
-            
-            const sanitizedCookies = backupSessionCookies.map(c => {
-                // 'no_restriction' ko standard 'None' me convert kar rahe hain aur expiration fix kar rahe hain
-                return {
-                    name: c.name,
-                    value: c.value,
-                    domain: '.pwthor.live', // Dot lagane se saare subdomains par kaam karega
-                    path: c.path || '/',
-                    httpOnly: c.httpOnly ?? true,
-                    secure: c.secure ?? true,
-                    sameSite: c.sameSite === 'no_restriction' ? 'None' : (c.sameSite || 'Lax'),
-                    expires: c.expires || c.expirationDate || Math.floor(Date.now() / 1000) + 31536000
-                };
-            });
-
+            const sanitizedCookies = backupSessionCookies.map(c => ({
+                name: c.name,
+                value: c.value,
+                domain: '.pwthor.live',
+                path: c.path || '/',
+                httpOnly: c.httpOnly ?? true,
+                secure: c.secure ?? true,
+                sameSite: c.sameSite === 'no_restriction' ? 'None' : (c.sameSite || 'Lax'),
+                expires: c.expires || c.expirationDate || Math.floor(Date.now() / 1000) + 31536000
+            }));
             await globalPage.setCookie(...sanitizedCookies);
         }
-
-        console.log("[RangeXCoder Engine] Verifying portal communication tunnel...");
-        await globalPage.goto(`${TARGET_ROOT}/study/batches`, { waitUntil: 'domcontentloaded', timeout: 60000 });
-        
-        isEngineReady = true;
-        console.log("[RangeXCoder Engine] Pipeline synchronization complete. Operational streams online.");
-    } catch (err) {
-        console.error("[Fatal RangeXCoder Engine Error]", err);
     }
+    
+    return globalPage;
 }
 
-// Highly responsive automation click handler to wipe out Apple Selection Overlay Modal
 async function autoBypassApplePopup(page) {
     try {
         await page.evaluate(() => {
@@ -104,46 +99,58 @@ async function autoBypassApplePopup(page) {
             });
             if (targetAppleElement) {
                 targetAppleElement.click();
-                console.log("[RangeXCoder Sniffer] Programmatic Apple bypass trigger action executed.");
+                console.log("[RangeXCoder Automation] Instantly skipped Apple OS platform select modal.");
             }
         });
     } catch (e) {}
 }
 
 app.get('/video-stream', async (req, res) => {
-    if (!isEngineReady) return res.status(503).json({ success: false, error: "Engine syncing channels..." });
-    
     const { batchId, subjectId, contentId } = req.query;
-    if (!batchId || !contentId) return res.status(400).json({ success: false, error: "Missing required query blocks." });
+    if (!batchId || !contentId) return res.status(400).json({ success: false, error: "Missing identity tags." });
 
     try {
+        if (!globalBrowser || !globalBrowser.isConnected()) {
+            globalBrowser = await puppeteer.launch({
+                headless: true,
+                executablePath: puppeteer.executablePath(),
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+            });
+        }
+
         const targetWatchUrl = `${TARGET_ROOT}/study/batches/${batchId}/subjects/${subjectId || 'all'}/contents/${contentId}/watch`;
-        console.log(`[RangeXCoder Tunnel] Routing crawler context to target frame: ${targetWatchUrl}`);
-        
         const targetPage = await globalBrowser.newPage();
         await targetPage.setUserAgent(savedUserAgent);
         
-        let interceptedData = null;
+        if(backupSessionCookies.length > 0) {
+            const sanitizedCookies = backupSessionCookies.map(c => ({
+                name: c.name,
+                value: c.value,
+                domain: '.pwthor.live',
+                path: c.path || '/',
+                httpOnly: c.httpOnly ?? true,
+                secure: c.secure ?? true,
+                sameSite: c.sameSite === 'no_restriction' ? 'None' : (c.sameSite || 'Lax')
+            }));
+            await targetPage.setCookie(...sanitizedCookies);
+        }
 
+        let interceptedData = null;
         await targetPage.setRequestInterception(true);
         targetPage.on('request', request => request.continue());
-
         targetPage.on('response', async response => {
             const url = response.url();
             if (url.includes('/api/v1/video/token') || url.includes('signedUrl') || url.includes('.mpd') || url.includes('.m3u8')) {
                 try {
-                    const mime = response.headers()['content-type'] || '';
-                    if (mime.includes('application/json')) {
+                    if ((response.headers()['content-type'] || '').includes('application/json')) {
                         interceptedData = await response.json();
-                        console.log("[RangeXCoder Sniffer] Intercepted stream configuration tokens.");
                     }
                 } catch (e) {}
             }
         });
 
-        await targetPage.goto(targetWatchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        await targetPage.goto(targetWatchUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
 
-        // Loop monitoring interface elements to ensure popup is dropped instantly
         for(let i = 0; i < 15; i++) {
             await new Promise(r => setTimeout(r, 300));
             await autoBypassApplePopup(targetPage);
@@ -151,30 +158,29 @@ app.get('/video-stream', async (req, res) => {
         }
 
         await targetPage.close();
-
-        if (interceptedData) {
-            res.json({ success: true, data: interceptedData });
-        } else {
-            res.status(404).json({ success: false, error: "Token signature or streaming manifest extraction window expired." });
-        }
-
+        if (interceptedData) res.json({ success: true, data: interceptedData });
+        else res.status(404).json({ success: false, error: "Token signature or manifest channel dropped." });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
 
-// Dynamic layout proxy pipe mirroring API structural response logs
 app.all('/api/*', async (req, res) => {
-    if (!isEngineReady) return res.status(503).json({ success: false, error: "Core engine updating maps..." });
     const targetUrl = `${TARGET_ROOT}${req.url}`;
-    
     try {
-        const result = await globalPage.evaluate(async (url, method, bodyString) => {
+        const page = await getSafeActivePage();
+        const result = await page.evaluate(async (url, method, bodyString) => {
             try {
-                const fetchOptions = { method: method, credentials: "include" };
+                const fetchOptions = { 
+                    method: method, 
+                    credentials: "include",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    }
+                };
                 if (method !== "GET" && bodyString) {
                     fetchOptions.body = bodyString;
-                    fetchOptions.headers = { "Content-Type": "application/json" };
                 }
                 const response = await fetch(url, fetchOptions);
                 const contentType = response.headers.get("content-type") || "";
@@ -191,9 +197,8 @@ app.all('/api/*', async (req, res) => {
         if (result.isJson) res.status(result.status).json(result.data);
         else res.status(result.status).send(result.data);
     } catch (e) {
-        res.status(500).json({ success: false, error: e.message });
+        res.status(500).json({ success: false, error: "Cloudflare tunnel bridge error: " + e.message });
     }
 });
 
-initializeRealBrowserEngine();
-app.listen(PORT, () => console.log(`[RangeXCoder Server] Operational portal active on ports tunnel: ${PORT}`));
+app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Tunnel Active on port: ${PORT}`));
