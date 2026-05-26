@@ -50,9 +50,12 @@
                 <span class="text-xl font-black tracking-tight text-white font-poppins">RangeXCoder</span>
             </div>
         </div>
-        <div class="flex items-center space-x-3">
-            <button onclick="toggleTokenModal(true)" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow hover:opacity-90 transition cursor-pointer flex items-center">
-                <i class="fa-solid fa-shield-halved mr-2"></i> Admin Token Console
+        <div class="flex items-center space-x-2">
+            <button onclick="toggleTokenModal(true)" class="bg-[#1f293d] hover:bg-[#2d3748] border border-[#2d3748] text-gray-300 text-xs font-bold px-4 py-2 rounded-lg transition cursor-pointer">
+                <i class="fa-solid fa-shield-halved mr-1.5 text-blue-400"></i> Inject Token
+            </button>
+            <button onclick="navigateToScreen('clearance-hub')" class="bg-gradient-to-r from-red-600 to-amber-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition cursor-pointer">
+                <i class="fa-solid fa-user-check mr-1.5"></i> Bypass Captcha Hub
             </button>
         </div>
     </header>
@@ -67,9 +70,7 @@
                     <input type="text" id="batchSearchBar" placeholder="Search your structural batch nodes..." class="w-full bg-[#0b111e] border border-[#1f293d] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#3b82f6] text-white transition placeholder-gray-500 font-medium">
                 </div>
             </div>
-
             <div id="batchesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-            
             <div id="paginationLoaderArea" class="flex justify-center pt-2">
                 <button id="btnLoadMoreBatches" class="bg-[#111827] hover:bg-[#1f293d] text-gray-300 font-bold text-xs px-6 py-3 rounded-lg border border-[#1f293d] transition cursor-pointer">
                     Load More Batches <i class="fa-solid fa-arrow-down ml-1.5"></i>
@@ -80,7 +81,6 @@
         <div id="viewBatchInternal" class="app-screen hidden space-y-5">
             <div class="bg-[#111827] p-5 rounded-xl border border-[#1f293d]">
                 <h2 class="text-xl font-bold text-white font-poppins" id="internalBatchTitle">Subjects Directories</h2>
-                <p class="text-xs text-gray-400 mt-1">Explore subject modules inside selected catalog branch.</p>
             </div>
             <div id="subjectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
         </div>
@@ -109,23 +109,40 @@
         <div id="viewTheatricalPlayer" class="absolute inset-0 bg-black z-50 flex flex-col hidden app-screen">
             <div class="bg-[#111827] border-b border-[#1f293d] px-4 py-3 flex items-center justify-between shrink-0">
                 <button id="closePlayerBtn" class="text-white hover:text-red-400 font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition">
-                    <i class="fa-solid fa-arrow-left text-sm"></i> <span>Close Arena</span>
+                    <i class="fa-solid fa-arrow-left text-sm"></i> <span>Close Player</span>
                 </button>
-                <h3 id="playerLectureTitleHeader" class="text-xs font-medium text-gray-300 truncate max-w-md px-2">Streaming Track Asset...</h3>
+                <h3 id="playerLectureTitleHeader" class="text-xs font-medium text-gray-300 truncate max-w-md px-2">Streaming...</h3>
                 <button id="toggleSlidesViewBtn" class="bg-[#1f293d] border border-[#2d3748] text-[#3b82f6] px-3 py-1.5 rounded-md text-xs font-bold hover:bg-[#2d3748] transition cursor-pointer">
                     <i class="fa-solid fa-chalkboard-user mr-1"></i>Whiteboard Index
                 </button>
             </div>
-
             <div class="flex-1 flex overflow-hidden relative bg-black">
-                <div class="flex-1 h-full flex items-center justify-center relative" id="videoViewportContainer">
+                <div class="flex-1 h-full flex items-center justify-center relative">
                     <video id="nativeVideoPlayer" class="w-full h-full" controls autoplay playsinline></video>
                 </div>
                 <div id="slidesDrawer" class="w-0 bg-[#111827] border-l border-transparent h-full flex flex-col overflow-y-auto transition-all duration-200 shrink-0">
-                    <div class="p-3 border-b border-[#1f293d] bg-[#0b111e] text-center">
-                        <span class="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Slide Timestamps</span>
-                    </div>
                     <div id="slidesListContainer" class="p-3 space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="viewClearanceHub" class="space-y-5 app-screen hidden max-w-3xl mx-auto">
+            <div class="bg-[#111827] border border-amber-500/20 p-5 rounded-2xl space-y-2 shadow-xl">
+                <h2 class="text-base font-bold text-amber-500 font-poppins flex items-center">
+                    <i class="fa-solid fa-user-shield mr-2 animate-pulse"></i> RangeXCoder Security Clearance Hub
+                </h2>
+                <p class="text-xs text-gray-400 leading-relaxed">Bhai, niche Render server par chal rahe asli browser ka live frame dikh raha hai. Website ka naam completely hidden hai. **Aap bas niche dikh rahe verification checkbox par click kijiye**, server khud wahan mouse click karke bypass kar dega!</p>
+                <div class="flex space-x-2 pt-2">
+                    <button onclick="refreshLiveClearanceFrame()" class="bg-[#1f293d] border border-[#2d3748] text-xs font-bold px-4 py-2 rounded-lg hover:bg-[#2d3748] transition cursor-pointer text-gray-200"><i class="fa-solid fa-rotate mr-1.5"></i> Refresh Live Frame</button>
+                    <button onclick="forceEngineRedirectHome()" class="bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow hover:bg-emerald-700 transition cursor-pointer"><i class="fa-solid fa-house mr-1.5"></i> Force System Unlock</button>
+                </div>
+            </div>
+            
+            <div class="bg-black border-2 border-[#1f293d] rounded-2xl overflow-hidden relative shadow-2xl flex items-center justify-center min-h-[400px]">
+                <img id="liveStreamBrowserFrame" src="" class="w-full h-auto cursor-crosshair select-none" alt="RangeXCoder Live Active Visual Secure Sandbox Stream View" onclick="handleVisualClearanceFrameClick(event)">
+                <div id="frameActionLoader" class="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center space-y-2 hidden">
+                    <div class="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-[10px] text-amber-500 font-mono font-bold uppercase tracking-wider">Syncing Cloud Clicks...</span>
                 </div>
             </div>
         </div>
@@ -140,18 +157,12 @@
     <div id="tokenVaultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-[#111827] border border-[#1f293d] p-6 rounded-2xl max-w-md w-full space-y-5 shadow-2xl">
             <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                    <h3 class="font-bold text-white text-sm font-poppins">Admin Token Injection Box</h3>
-                </div>
+                <h3 class="font-bold text-white text-sm font-poppins">Admin Token Injection Box</h3>
                 <button onclick="toggleTokenModal(false)" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs text-gray-400 leading-relaxed">Bhai, real website par normal login karke apni cookie se <code class="text-blue-400 font-mono">auth_token</code> ki text value copy karo aur niche paste kar do.</p>
-            
             <div class="space-y-3">
-                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Paste Auth Token String</label>
-                <textarea id="inputRawAuthToken" rows="4" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX..." class="w-full bg-[#0b111e] border border-[#1f293d] rounded-lg p-3 text-xs focus:outline-none focus:border-blue-500 text-white font-mono"></textarea>
-                <button onclick="submitTokenToVault()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-lg transition cursor-pointer">Inject Token permanently</button>
+                <textarea id="inputRawAuthToken" rows="4" placeholder="Paste auth_token value here..." class="w-full bg-[#0b111e] border border-[#1f293d] rounded-lg p-3 text-xs focus:outline-none focus:border-blue-500 text-white font-mono"></textarea>
+                <button onclick="submitTokenToVault()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-lg transition cursor-pointer">Inject Token Permanently</button>
             </div>
             <p id="vaultStatusMessage" class="text-[10px] text-blue-400 font-bold font-mono text-center bg-blue-500/5 py-2 rounded hidden border border-blue-500/10"></p>
         </div>
@@ -192,12 +203,10 @@
 
         async function submitTokenToVault() {
             const tokenValue = document.getElementById('inputRawAuthToken').value;
-            if(!tokenValue || tokenValue.trim() === "") return alert("Bhai token ki value toh dalo!");
-            
+            if(!tokenValue) return alert("Please fill token value parameters.");
             const statusEl = document.getElementById('vaultStatusMessage');
-            statusEl.innerText = "Injecting token into secure backend storage...";
+            statusEl.innerText = "Injecting token into storage volume...";
             statusEl.classList.remove('hidden');
-
             try {
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/api/admin/set-token`, {
                     method: 'POST',
@@ -206,12 +215,57 @@
                 });
                 const data = await res.json();
                 if(data.success) {
-                    statusEl.innerText = "Token injected successfully! Synchronizing system map...";
-                    setTimeout(() => { toggleTokenModal(false); loadMainBatchesData(false); }, 1500);
-                } else {
-                    statusEl.innerText = "Injection failed: " + data.error;
-                }
-            } catch(e) { statusEl.innerText = "Network bridge disconnect."; }
+                    statusEl.innerText = "Token saved successfully! Syncing layout maps...";
+                    setTimeout(() => { toggleTokenModal(false); loadMainBatchesData(false); }, 1200);
+                } else { statusEl.innerText = "Error: " + data.error; }
+            } catch(e) { statusEl.innerText = "Connection link fail."; }
+        }
+
+        // LIVE BYPASS MOUSE INTERACTION HANDLING LOGIC
+        function refreshLiveClearanceFrame() {
+            document.getElementById('liveStreamBrowserFrame').src = `${LOCAL_SERVER_ROOT}/api/admin/screenshot?t=${Date.now()}`;
+        }
+
+        async function handleVisualClearanceFrameClick(event) {
+            const img = document.getElementById('liveStreamBrowserFrame');
+            const loader = document.getElementById('frameActionLoader');
+            
+            const rect = img.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+            
+            // Transform matrix coordinates straight into cloud viewport scaling format (1920x1080)
+            const scaledX = Math.round((clickX / rect.width) * 1920);
+            const scaledY = Math.round((clickY / rect.height) * 1080);
+            
+            loader.classList.remove('hidden');
+            try {
+                await fetch(`${LOCAL_SERVER_ROOT}/api/admin/click`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ x: scaledX, y: scaledY })
+                });
+                // Hold micro delay interval to let cloud frames process rendering transitions smoothly
+                setTimeout(() => { loader.classList.add('hidden'); refreshLiveClearanceFrame(); }, 1500);
+            } catch(e) { loader.classList.add('hidden'); }
+        }
+
+        async function forceEngineRedirectHome() {
+            elementLoading.classList.remove('hidden');
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/admin/goto-home`);
+                const data = await res.json();
+                if(data.success) { navigateToScreen('batches'); loadMainBatchesData(false); }
+            } catch(e){} finally { elementLoading.classList.add('hidden'); }
+        }
+
+        function checkCloudflareInterceptBlock(jsonResponse) {
+            if(jsonResponse && jsonResponse.isCloudflare) {
+                navigateToScreen('clearance-hub');
+                refreshLiveClearanceFrame();
+                return true;
+            }
+            return false;
         }
 
         function navigateToScreen(screenId, saveHistory = true) {
@@ -224,8 +278,9 @@
             else if(screenId === 'subject-topics') document.getElementById('viewSubjectTopics').classList.remove('hidden');
             else if(screenId === 'topic-subtabs') document.getElementById('viewTopicTabs').classList.remove('hidden');
             else if(screenId === 'theatrical-player') document.getElementById('viewTheatricalPlayer').classList.remove('hidden');
+            else if(screenId === 'clearance-hub') document.getElementById('viewClearanceHub').classList.remove('hidden');
 
-            if (screenId === 'theatrical-player') btnGlobalBack.classList.add('hidden');
+            if (screenId === 'theatrical-player' || screenId === 'clearance-hub') btnGlobalBack.classList.add('hidden');
             else if (previousScreensStack.length > 0) btnGlobalBack.classList.remove('hidden');
             else btnGlobalBack.classList.add('hidden');
         }
@@ -244,15 +299,15 @@
             try {
                 const profileResponse = await fetch(`${LOCAL_SERVER_ROOT}/api/AboutMe`);
                 const profileJson = await profileResponse.json();
+                if(checkCloudflareInterceptBlock(profileJson)) return;
+                
                 if(profileJson.success && profileJson.enrolledBatches && profileJson.enrolledBatches.length > 0) {
                     renderBatchCardsToGrid(profileJson.enrolledBatches, appendMode);
                     btnLoadMoreBatches.classList.add('hidden');
                     elementLoading.classList.add('hidden');
                     return;
                 }
-            } catch(profileErr) {
-                console.log("[Notice] Session unauthenticated or standard public catalog active.");
-            }
+            } catch(profileErr) {}
 
             let targetApiUrl = `${LOCAL_SERVER_ROOT}/api/AllBatches?page=${currentBatchesPage}`;
             if(activeSearchQueryString.trim() !== "") {
@@ -262,12 +317,14 @@
             try {
                 const res = await fetch(targetApiUrl);
                 const json = await res.json();
+                if(checkCloudflareInterceptBlock(json)) return;
+                
                 if(json.success && json.data) {
                     renderBatchCardsToGrid(json.data, appendMode);
                     if(json.data.length < 9) btnLoadMoreBatches.classList.add('hidden');
                     else btnLoadMoreBatches.classList.remove('hidden');
                 } else {
-                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online records found. Please update token from top panel console.</p>`;
+                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No records synced. Update dynamic token parameter strings from top console.</p>`;
                     btnLoadMoreBatches.classList.add('hidden');
                 }
             } catch(e) {
@@ -292,7 +349,7 @@
         function renderBatchCardsToGrid(batchesArray, appendMode = false) {
             const htmlString = batchesArray.map(b => {
                 const exactId = b.batchId || b._id;
-                const finalTitleName = b.batchName || b.name || 'Structural Track Core';
+                const finalTitleName = b.batchName || b.name || 'Core Module Track';
                 const thumb = b.batchImage || 'https://via.placeholder.com/400x220?text=RangeXCoder+Asset';
                 return `
                     <div class="pw-card p-4 flex flex-col justify-between relative">
@@ -324,6 +381,8 @@
             try {
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/api/BatchInfo?BatchId=${batchId}&Type=details`);
                 const json = await res.json();
+                if(checkCloudflareInterceptBlock(json)) return;
+                
                 if(json.success && json.data && json.data.subjects) {
                     gridSubjects.innerHTML = json.data.subjects.map(s => {
                         let resolvedImg = (s.imageId && s.imageId.baseUrl && s.imageId.key) ? (s.imageId.baseUrl + s.imageId.key) : "https://via.placeholder.com/350x200/111827/ffffff?text=Subject+Track";
@@ -337,7 +396,7 @@
                         `;
                     }).join('');
                 } else {
-                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No modules found inside directory mapping.</p>`;
+                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No structural modules populated inside branch nodes.</p>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -350,6 +409,8 @@
             try {
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/api/SubjectInfo?BatchId=${currentActiveBatchId}&SubjectId=${slug}&page=1`);
                 const json = await res.json();
+                if(checkCloudflareInterceptBlock(json)) return;
+                
                 if(json.data && json.data.length > 0) {
                     gridFolderTopics.innerHTML = json.data.map(t => {
                         return `
@@ -365,7 +426,7 @@
                         `;
                     }).join('');
                 } else {
-                    gridFolderTopics.innerHTML = `<p class="text-center text-xs text-gray-500 col-span-full py-12">No dynamic topic tracks compiled.</p>`;
+                    gridFolderTopics.innerHTML = `<p class="text-center text-xs text-gray-500 col-span-full py-12">No topic tracks compiled at destination target pointer.</p>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -381,16 +442,18 @@
                 try {
                     const res = await fetch(`${LOCAL_SERVER_ROOT}/api/DppQuiz?BatchId=${currentActiveBatchId}&SubjectId=${currentActiveSubjectSlug}&TopicId=${slug}`);
                     const json = await res.json();
+                    if(checkCloudflareInterceptBlock(json)) return;
+                    
                     const array = json.data || [];
                     if(array.length > 0) {
                         displayTabSlot.innerHTML = array.map(q => `
                             <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex flex-col justify-between">
                                 <h4 class="text-xs font-bold text-gray-200 font-poppins line-clamp-2">${q.title || 'Interactive Evaluation Module'}</h4>
-                                <button onclick="alert('Interactive quiz arena framework active.')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white py-2.5 rounded-lg text-[11px] font-bold transition cursor-pointer">Launch Dynamic MCQ Arena</button>
+                                <button onclick="alert('Interactive quiz arena active.')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white py-2.5 rounded-lg text-[11px] font-bold transition cursor-pointer">Launch MCQ Arena</button>
                             </div>
                         `).join('');
                     } else {
-                        displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No active dynamic quiz modules published inside index channel.</div>`;
+                        displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No quiz modules found inside directory index logs.</div>`;
                     }
                 } catch(e){} finally { elementLoading.classList.add('hidden'); }
                 return;
@@ -399,12 +462,13 @@
             try {
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/api/TopicInfo?BatchId=${currentActiveBatchId}&SubjectId=${currentActiveSubjectSlug}&TopicId=${slug}&ContentType=${currentActiveContentTypeTab}&page=1`);
                 const json = await res.json();
-                const array = json.data || [];
+                if(checkCloudflareInterceptBlock(json)) return;
                 
+                const array = json.data || [];
                 if(array.length > 0) {
                     if(currentActiveContentTypeTab === "videos" || currentActiveContentTypeTab === "DppVideos") {
                         displayTabSlot.innerHTML = array.map(item => {
-                            const cleanTitle = item.topic || 'Untitled Stream Node';
+                            const cleanTitle = item.topic || 'Untitled Video Lecture Asset Node';
                             const thumb = item.videoDetails?.image || 'https://via.placeholder.com/350x180/0b111e/ffffff?text=Video+Lecture';
                             return `
                                 <div class="pw-card p-3 flex flex-col justify-between">
@@ -430,7 +494,7 @@
                         `).join('');
                     }
                 } else {
-                    displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No compiled assets registered at node index segment.</div>`;
+                    displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No compiled assets registered at node track layer.</div>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -464,7 +528,9 @@
             try {
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/video-stream?batchId=${currentActiveBatchId}&subjectId=${currentActiveSubjectSlug}&contentId=${contentId}`);
                 const json = await res.json();
-                if(!json.success || !json.data || !json.data.url) throw new Error("Manifest track generation signature expired.");
+                if(checkCloudflareInterceptBlock(json)) return;
+                
+                if(!json.success || !json.data || !json.data.url) throw new Error("Manifest stream token signatures expired.");
 
                 let baseManifestTargetUrl = json.data.url + (json.data.signedUrl || "");
 
@@ -480,9 +546,7 @@
 
                 await shakaPlayerInstanceInstance.load(baseManifestTargetUrl);
                 fetchLectureWhiteboardSlidesData(contentId);
-            } catch(error) {
-                alert("Player Link Validation Error: " + error.message);
-            }
+            } catch(error) { alert("Player Native Error: " + error.message); }
         }
 
         async function fetchLectureWhiteboardSlidesData(scheduleId) {
@@ -499,26 +563,22 @@
                         return `
                             <div onclick="document.getElementById('nativeVideoPlayer').currentTime = ${targetTime}" class="bg-[#0b111e] border border-[#1f293d] p-1.5 rounded-lg flex flex-col space-y-1.5 cursor-pointer hover:border-[#3b82f6] transition shadow-inner">
                                 <div class="w-full h-24 rounded overflow-hidden relative bg-black">
-                                    <img src="${absoluteUrl}" class="w-full h-full object-contain" onerror="this.src='https://via.placeholder.com/200x120?text=Slide'">
-                                    <span class="absolute top-1 left-1 bg-black/80 text-[8px] font-bold text-[#3b82f6] px-1.5 py-0.5 rounded border border-[#3b82f6]/10">${mins}:${secs}</span>
+                                    <img src="${absoluteUrl}" class="w-full h-full object-contain">
+                                    <span class="absolute top-1 left-1 bg-black/80 text-[8px] font-bold text-[#3b82f6] px-1.5 py-0.5 rounded">${mins}:${secs}</span>
                                 </div>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No whiteboard snapshots indexed.</p>`;
+                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No snapshots indexed.</p>`;
                 }
             } catch(e){}
         }
 
         document.getElementById('closePlayerBtn').addEventListener('click', async () => {
-            if (shakaPlayerInstanceInstance) { 
-                await shakaPlayerInstanceInstance.destroy(); 
-                shakaPlayerInstanceInstance = null; 
-            }
+            if (shakaPlayerInstanceInstance) { await shakaPlayerInstanceInstance.destroy(); shakaPlayerInstanceInstance = null; }
             const video = document.getElementById('nativeVideoPlayer');
-            video.src = "";
-            video.load();
+            video.src = ""; video.load();
             navigateToScreen("topic-subtabs");
         });
 
