@@ -15,12 +15,9 @@ app.use(cookieParser());
 // Static files setup
 app.use(express.static(path.join(__dirname)));
 
-// =========================================================================
-// FIXED: HOMEPAGE ROUTER (Iske bina link kholne par Not Found aa raha tha)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
-// =========================================================================
 
 const savedUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 let globalBrowser = null;
@@ -44,6 +41,10 @@ const backupSessionCookies = [
     }
 ];
 
+/**
+ * BULLETPROOF HELPER: Auto-Rebirth & Lazy Initialization
+ * FIXED: Added advanced stealth arguments and fingerprint cloaking modifications.
+ */
 async function getSafeActivePage() {
     if (!globalBrowser || !globalBrowser.isConnected()) {
         console.log("[RangeXCoder Engine] Launching global native system Chromium branch...");
@@ -53,12 +54,13 @@ async function getSafeActivePage() {
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
-                '--disable-blink-features=AutomationControlled',
+                '--disable-blink-features=AutomationControlled', // Turns off automation flags
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
                 '--no-zygote',
                 '--single-process',
-                '--disable-web-security'
+                '--disable-web-security',
+                '--window-size=1920,1080'
             ]
         });
         globalPage = null; 
@@ -67,7 +69,23 @@ async function getSafeActivePage() {
     if (!globalPage || globalPage.isClosed()) {
         const pages = await globalBrowser.pages();
         globalPage = pages.length > 0 ? pages[0] : await globalBrowser.newPage();
+        
+        // Anti-Fingerprinting Cloaking: Overriding native variables to pass Cloudflare
         await globalPage.setUserAgent(savedUserAgent);
+        
+        await globalPage.evaluateOnNewDocument(() => {
+            // Overwrite the webdriver property to completely hide puppeteer footprint
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            
+            // Mock native language preferences
+            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+            
+            // Mock standard chrome global object runtime structures
+            window.chrome = { runtime: {} };
+            
+            // Mask plugins list lengths
+            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+        });
         
         await globalPage.goto(TARGET_ROOT, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
         
@@ -89,6 +107,7 @@ async function getSafeActivePage() {
     return globalPage;
 }
 
+// Target overlay interaction tracker logic (Untouched)
 async function autoBypassApplePopup(page) {
     try {
         await page.evaluate(() => {
@@ -105,6 +124,7 @@ async function autoBypassApplePopup(page) {
     } catch (e) {}
 }
 
+// Video streaming crawler handler (Untouched)
 app.get('/video-stream', async (req, res) => {
     const { batchId, subjectId, contentId } = req.query;
     if (!batchId || !contentId) return res.status(400).json({ success: false, error: "Missing identity tags." });
@@ -114,7 +134,13 @@ app.get('/video-stream', async (req, res) => {
             globalBrowser = await puppeteer.launch({
                 headless: true,
                 executablePath: puppeteer.executablePath(),
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+                args: [
+                    '--no-sandbox', 
+                    '--disable-setuid-sandbox', 
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-dev-shm-usage', 
+                    '--disable-gpu'
+                ]
             });
         }
 
@@ -165,6 +191,7 @@ app.get('/video-stream', async (req, res) => {
     }
 });
 
+// Secure Cloudflare Tunneling Endpoint using Masked Active Page context
 app.all('/api/*', async (req, res) => {
     const targetUrl = `${TARGET_ROOT}${req.url}`;
     try {
@@ -197,7 +224,7 @@ app.all('/api/*', async (req, res) => {
         if (result.isJson) res.status(result.status).json(result.data);
         else res.status(result.status).send(result.data);
     } catch (e) {
-        res.status(500).json({ success: false, error: "Cloudflare tunnel bridge error: " + e.message });
+        res.status(500).json({ success: false, error: "Cloudflare tunnel bridge stealth failure: " + e.message });
     }
 });
 
