@@ -10,14 +10,10 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
         
-        :root {
-            --font-poppins: "Poppins", sans-serif;
-            --font-inter: "Inter", sans-serif;
-        }
         body {
             background-color: #0b111e;
             color: #f3f4f6;
-            font-family: var(--font-inter);
+            font-family: "Inter", sans-serif;
             margin: 0;
             padding: 0;
         }
@@ -55,9 +51,9 @@
             </div>
         </div>
         <div class="flex items-center space-x-3">
-            <span class="text-[11px] font-bold text-[#3b82f6] bg-[#3b82f6]/10 px-3 py-1.5 rounded-full border border-[#3b82f6]/20 flex items-center">
-                <span class="w-1.5 h-1.5 rounded-full bg-[#3b82f6] animate-pulse mr-2"></span>Engine Direct Tunnel Active
-            </span>
+            <button onclick="toggleLoginModal(true)" class="bg-gradient-to-r from-amber-600 to-amber-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow hover:opacity-90 transition cursor-pointer flex items-center">
+                <i class="fa-solid fa-key mr-2"></i> OTP Authentication Tunnel
+            </button>
         </div>
     </header>
 
@@ -65,7 +61,7 @@
 
         <div id="viewAllBatches" class="space-y-6 app-screen">
             <div class="bg-[#111827] p-5 rounded-xl border border-[#1f293d] space-y-4 shadow-sm">
-                <h2 class="text-lg font-bold text-white font-poppins">My Batches Catalogs</h2>
+                <h2 class="text-base font-bold text-white font-poppins">My Batches Catalogs</h2>
                 <div class="relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-500 text-sm"></i>
                     <input type="text" id="batchSearchBar" placeholder="Search your structural batch nodes..." class="w-full bg-[#0b111e] border border-[#1f293d] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#3b82f6] text-white transition placeholder-gray-500 font-medium">
@@ -84,7 +80,7 @@
         <div id="viewBatchInternal" class="app-screen hidden space-y-5">
             <div class="bg-[#111827] p-5 rounded-xl border border-[#1f293d]">
                 <h2 class="text-xl font-bold text-white font-poppins" id="internalBatchTitle">Subjects Directories</h2>
-                <p class="text-xs text-gray-400 mt-1">Select structured parameters to check subject catalogs.</p>
+                <p class="text-xs text-gray-400 mt-1">Select structured parameters to explore subject catalogs.</p>
             </div>
             <div id="subjectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
         </div>
@@ -113,7 +109,7 @@
         <div id="viewTheatricalPlayer" class="absolute inset-0 bg-black z-50 flex flex-col hidden app-screen">
             <div class="bg-[#111827] border-b border-[#1f293d] px-4 py-3 flex items-center justify-between shrink-0">
                 <button id="closePlayerBtn" class="text-white hover:text-red-400 font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition">
-                    <i class="fa-solid fa-arrow-left text-sm"></i> <span>Close Arena</span>
+                    <i class="fa-solid fa-arrow-left text-sm"></i> <span>Close Player</span>
                 </button>
                 <h3 id="playerLectureTitleHeader" class="text-xs font-medium text-gray-300 truncate max-w-md px-2">Streaming Track Asset...</h3>
                 <button id="toggleSlidesViewBtn" class="bg-[#1f293d] border border-[#2d3748] text-[#3b82f6] px-3 py-1.5 rounded-md text-xs font-bold hover:bg-[#2d3748] transition cursor-pointer">
@@ -125,7 +121,6 @@
                 <div class="flex-1 h-full flex items-center justify-center relative" id="videoViewportContainer">
                     <video id="nativeVideoPlayer" class="w-full h-full" controls autoplay playsinline></video>
                 </div>
-                
                 <div id="slidesDrawer" class="w-0 bg-[#111827] border-l border-transparent h-full flex flex-col overflow-y-auto transition-all duration-200 shrink-0">
                     <div class="p-3 border-b border-[#1f293d] bg-[#0b111e] text-center">
                         <span class="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Slide Timestamps</span>
@@ -137,10 +132,40 @@
 
         <div id="loadingIndicator" class="hidden py-12 text-center flex flex-col items-center justify-center space-y-2">
             <div class="w-6 h-6 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hydrating API Tunnel Grid...</p>
+            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hydrating RangeXCoder System...</p>
         </div>
 
     </main>
+
+    <div id="authTunnelModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-[#111827] border border-[#1f293d] p-6 rounded-2xl max-w-md w-full space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></div>
+                    <h3 class="font-bold text-white text-sm font-poppins">OTP Authentication Terminal</h3>
+                </div>
+                <button onclick="toggleLoginModal(false)" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-gray-400 leading-relaxed">Bhai yahan apna phone no. aur received OTP bhej kar server browser ko instantly dynamic sync kar sakte ho.</p>
+            
+            <div id="phoneNodeArea" class="space-y-3">
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 1: Enter Registered Phone Number</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="inputUserMobile" placeholder="Enter 10 Digit No. (e.g. 8853817652)" class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
+                    <button onclick="triggerTunnelSendOtp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 rounded-lg transition shrink-0 cursor-pointer">Get OTP</button>
+                </div>
+            </div>
+
+            <div id="otpNodeArea" class="space-y-3 hidden">
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 2: Enter OTP Validation Key</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="inputUserOtp" placeholder="Enter OTP Verification Code" class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
+                    <button onclick="triggerTunnelVerifyOtp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 rounded-lg transition shrink-0 cursor-pointer">Verify & Core Link</button>
+                </div>
+            </div>
+            <p id="authTerminalStatusMessage" class="text-[10px] text-amber-500 font-bold font-mono text-center bg-amber-500/5 py-2 rounded hidden border border-amber-500/10"></p>
+        </div>
+    </div>
 
     <script>
         let activeScreenId = "batches";
@@ -170,6 +195,57 @@
         const batchSearchBar = document.getElementById('batchSearchBar');
         const btnLoadMoreBatches = document.getElementById('btnLoadMoreBatches');
 
+        function toggleLoginModal(show) {
+            document.getElementById('authTunnelModal').classList.toggle('hidden', !show);
+            document.getElementById('authTerminalStatusMessage').classList.add('hidden');
+        }
+
+        async function triggerTunnelSendOtp() {
+            const mobile = document.getElementById('inputUserMobile').value;
+            if(!mobile) return alert("Please type structural valid phone connection code.");
+            updateStatusLabel("Dispatching OTP route connection...");
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/auth/send-otp`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('otpNodeArea').classList.remove('hidden');
+                    updateStatusLabel("OTP request triggered! Enter code key below.");
+                } else {
+                    updateStatusLabel("Error: " + data.error);
+                }
+            } catch(e) { updateStatusLabel("Bridge connection lost."); }
+        }
+
+        async function triggerTunnelVerifyOtp() {
+            const otp = document.getElementById('inputUserOtp').value;
+            if(!otp) return alert("Please supply OTP digit parameters.");
+            updateStatusLabel("Verifying cryptographic credentials inside terminal context...");
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/auth/verify-otp`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ otp })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    updateStatusLabel("Authentication Linked Successfully! Refreshing system matrix...");
+                    setTimeout(() => { toggleLoginModal(false); loadMainBatchesData(false); }, 1500);
+                } else {
+                    updateStatusLabel("Verification failed: " + data.error);
+                }
+            } catch(e) { updateStatusLabel("Pipeline link corrupted."); }
+        }
+
+        function updateStatusLabel(msg) {
+            const el = document.getElementById('authTerminalStatusMessage');
+            el.innerText = msg;
+            el.classList.remove('hidden');
+        }
+
         function navigateToScreen(screenId, saveHistory = true) {
             if (saveHistory && activeScreenId !== screenId) previousScreensStack.push(activeScreenId);
             activeScreenId = screenId;
@@ -197,21 +273,21 @@
             if (!appendMode) { gridBatches.innerHTML = ''; currentBatchesPage = 1; }
             elementLoading.classList.remove('hidden');
             
-            let targetApiUrl = `${LOCAL_SERVER_ROOT}/api/v1/batches/my-batches?page=${currentBatchesPage}`;
+            // FIXED: Target mapping exactly real active API log paths
+            let targetApiUrl = `${LOCAL_SERVER_ROOT}/api/AllBatches?page=${currentBatchesPage}`;
             if(activeSearchQueryString.trim() !== "") {
-                targetApiUrl = `${LOCAL_SERVER_ROOT}/api/v1/batches/search?name=${encodeURIComponent(activeSearchQueryString)}&page=${currentBatchesPage}`;
+                targetApiUrl = `${LOCAL_SERVER_ROOT}/api/searchBatch?name=${encodeURIComponent(activeSearchQueryString)}&page=${currentBatchesPage}`;
             }
 
             try {
                 const res = await fetch(targetApiUrl);
                 const json = await res.json();
-                const itemsArray = json.data?.batches || json.data || [];
-                if(itemsArray.length > 0) {
-                    renderBatchCardsToGrid(itemsArray, appendMode);
-                    if(itemsArray.length < 9) btnLoadMoreBatches.classList.add('hidden');
+                if(json.success && json.data) {
+                    renderBatchCardsToGrid(json.data, appendMode);
+                    if(json.data.length < 9) btnLoadMoreBatches.classList.add('hidden');
                     else btnLoadMoreBatches.classList.remove('hidden');
                 } else {
-                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online batch items synchronized inside ecosystem.</p>`;
+                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online batch items synchronized inside ecosystem. Please execute OTP login connector terminal above.</p>`;
                     btnLoadMoreBatches.classList.add('hidden');
                 }
             } catch(e) {
@@ -239,14 +315,14 @@
                 return `
                     <div class="pw-card p-4 flex flex-col justify-between relative">
                         <div class="w-full h-44 bg-[#0b111e] rounded-lg overflow-hidden mb-3 border border-[#1f293d]/40">
-                            <img src="${b.batchImage || b.previewImage || 'https://via.placeholder.com/400x220?text=RangeXCoder+Asset'}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x220?text=RangeXCoder+Stream'">
+                            <img src="${b.batchImage || 'https://via.placeholder.com/400x220?text=RangeXCoder+Asset'}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x220?text=RangeXCoder+Stream'">
                         </div>
                         <div class="space-y-1 flex-1 flex flex-col justify-between">
                             <div>
                                 <span class="text-[9px] font-bold uppercase text-[#3b82f6] bg-[#3b82f6]/5 px-2 py-0.5 rounded border border-[#3b82f6]/10 inline-block">${b.language || 'Hinglish'}</span>
-                                <h3 class="text-xs font-bold text-white line-clamp-2 pt-1 font-poppins">${b.batchName || b.name}</h3>
+                                <h3 class="text-xs font-bold text-white line-clamp-2 pt-1 font-poppins">${b.batchName}</h3>
                             </div>
-                            <button onclick="loadBatchSubjects('${exactId}', '${(b.batchName || b.name).replace(/'/g, "\\'")}')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white font-bold text-[11px] py-2.5 rounded-lg border border-[#2d3748] cursor-pointer transition">
+                            <button onclick="loadBatchSubjects('${exactId}', '${b.batchName.replace(/'/g, "\\'")}')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white font-bold text-[11px] py-2.5 rounded-lg border border-[#2d3748] cursor-pointer transition">
                                 <i class="fa-solid fa-folder-open mr-1.5"></i>Launch Subjects Arena
                             </button>
                         </div>
@@ -264,23 +340,22 @@
             navigateToScreen("internal-subjects");
             document.getElementById('internalBatchTitle').innerText = title;
             try {
-                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/v1/batches/${batchId}/subjects`);
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/BatchInfo?BatchId=${batchId}&Type=details`);
                 const json = await res.json();
-                const subjects = json.data?.subjects || json.data || [];
-                if(subjects.length > 0) {
-                    gridSubjects.innerHTML = subjects.map(s => {
+                if(json.success && json.data && json.data.subjects) {
+                    gridSubjects.innerHTML = json.data.subjects.map(s => {
                         let resolvedImg = (s.imageId && s.imageId.baseUrl && s.imageId.key) ? (s.imageId.baseUrl + s.imageId.key) : "https://via.placeholder.com/350x200/111827/ffffff?text=Subject+Track";
                         return `
-                            <div onclick="loadSubjectChapters('${s._id || s.slug}', '${s.subjectName || s.subject.replace(/'/g, "\\'")}')" class="pw-card p-3 flex flex-col justify-between cursor-pointer">
+                            <div onclick="loadSubjectChapters('${s.slug}', '${s.subject.replace(/'/g, "\\'")}')" class="pw-card p-3 flex flex-col justify-between cursor-pointer">
                                 <div class="w-full h-32 bg-[#0b111e] rounded-lg overflow-hidden mb-2.5 border border-[#1f293d]/40">
                                     <img src="${resolvedImg}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/350x200/111827/ffffff?text=Subject+Track'">
                                 </div>
-                                <h4 class="font-bold text-xs text-white truncate px-0.5 font-poppins">${s.subjectName || s.subject}</h4>
+                                <h4 class="font-bold text-xs text-white truncate px-0.5 font-poppins">${s.subject}</h4>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No structural modules populated inside this branch nodes.</p>`;
+                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No modules found inside directory mapping.</p>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -291,25 +366,24 @@
             navigateToScreen("subject-topics");
             document.getElementById('topicsHeaderTitle').innerText = title;
             try {
-                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/v1/batches/${currentActiveBatchId}/subjects/${slug}/topics?page=1`);
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/SubjectInfo?BatchId=${currentActiveBatchId}&SubjectId=${slug}&page=1`);
                 const json = await res.json();
-                const folders = json.data?.topics || json.data || [];
-                if(folders.length > 0) {
-                    gridFolderTopics.innerHTML = folders.map(t => {
+                if(json.data && json.data.length > 0) {
+                    gridFolderTopics.innerHTML = json.data.map(t => {
                         return `
-                            <div onclick="loadTopicTabs('${t._id || t.slug}', '${t.topicName || t.name.replace(/'/g, "\\'")}')" class="bg-[#111827] border border-[#1f293d] hover:border-[#3b82f6]/40 p-4 rounded-xl flex items-center justify-between cursor-pointer transition">
+                            <div onclick="loadTopicTabs('${t.slug}', '${t.name.replace(/'/g, "\\'")}')" class="bg-[#111827] border border-[#1f293d] hover:border-[#3b82f6]/40 p-4 rounded-xl flex items-center justify-between cursor-pointer transition">
                                 <div class="flex items-center space-x-3 overflow-hidden">
                                     <i class="fa-solid fa-folder text-amber-500 text-lg shrink-0"></i>
-                                    <span class="font-bold text-xs text-gray-200 truncate font-poppins">${t.topicName || t.name}</span>
+                                    <span class="font-bold text-xs text-gray-200 truncate font-poppins">${t.name}</span>
                                 </div>
                                 <div class="flex items-center text-[10px] font-bold text-[#3b82f6] bg-[#3b82f6]/5 border border-[#3b82f6]/10 px-2 py-1 rounded">
-                                    <i class="fa-solid fa-layer-group mr-1.5"></i>Check Units
+                                    <i class="fa-solid fa-layer-group mr-1.5"></i>Open Index
                                 </div>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    gridFolderTopics.innerHTML = `<p class="text-center text-xs text-gray-500 col-span-full py-12">No dynamic topic logs attached to node point.</p>`;
+                    gridFolderTopics.innerHTML = `<p class="text-center text-xs text-gray-500 col-span-full py-12">No explicit topics referenced at node pointer.</p>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -321,51 +395,60 @@
             document.getElementById('topicTabsMainTitle').innerText = name;
             displayTabSlot.innerHTML = '';
             
+            if(currentActiveContentTypeTab === "DppQuiz") {
+                try {
+                    const res = await fetch(`${LOCAL_SERVER_ROOT}/api/DppQuiz?BatchId=${currentActiveBatchId}&SubjectId=${currentActiveSubjectSlug}&TopicId=${slug}`);
+                    const json = await res.json();
+                    const array = json.data || [];
+                    if(array.length > 0) {
+                        displayTabSlot.innerHTML = array.map(q => `
+                            <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex flex-col justify-between">
+                                <h4 class="text-xs font-bold text-gray-200 font-poppins line-clamp-2">${q.title || 'Interactive Evaluation Module'}</h4>
+                                <button onclick="alert('Quiz layout connection ready.')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white py-2.5 rounded-lg text-[11px] font-bold transition cursor-pointer">Launch Dynamic MCQ Arena</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No active dynamic quiz data compiled inside module structure.</div>`;
+                    }
+                } catch(e){} finally { elementLoading.classList.add('hidden'); }
+                return;
+            }
+
             try {
-                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/v1/batches/${currentActiveBatchId}/subjects/${currentActiveSubjectSlug}/topics/${slug}?contentType=${currentActiveContentTypeTab}&page=1`);
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/TopicInfo?BatchId=${currentActiveBatchId}&SubjectId=${currentActiveSubjectSlug}&TopicId=${slug}&ContentType=${currentActiveContentTypeTab}&page=1`);
                 const json = await res.json();
-                const array = json.data?.contents || json.data || [];
+                const array = json.data || [];
                 
                 if(array.length > 0) {
                     if(currentActiveContentTypeTab === "videos" || currentActiveContentTypeTab === "DppVideos") {
                         displayTabSlot.innerHTML = array.map(item => {
-                            const cleanTitle = item.title || item.topic || 'Untitled Stream Node';
-                            const thumb = item.videoDetails?.image || item.thumbnail || 'https://via.placeholder.com/350x180/0b111e/ffffff?text=Video+Lecture';
+                            const cleanTitle = item.topic || 'Untitled Stream Node';
+                            const thumb = item.videoDetails?.image || 'https://via.placeholder.com/350x180/0b111e/ffffff?text=Video+Lecture';
                             return `
                                 <div class="pw-card p-3 flex flex-col justify-between">
                                     <div class="w-full h-40 rounded-lg overflow-hidden relative bg-[#0b111e] border border-[#1f293d]/50">
                                         <img src="${thumb}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/350x180/0b111e/ffffff?text=Video+Lecture'">
                                     </div>
                                     <h4 class="text-xs font-bold text-gray-200 mt-2.5 line-clamp-2 leading-relaxed font-poppins">${cleanTitle}</h4>
-                                    <button onclick="executeFinalPlaybackStream('${item._id || item.contentId}', '${cleanTitle.replace(/'/g, "\\'")}')" class="w-full mt-3 bg-[#3b82f6] hover:bg-blue-600 text-white py-2.5 rounded-lg text-xs font-bold cursor-pointer transition">
+                                    <button onclick="executeFinalPlaybackStream('${item._id}', '${cleanTitle.replace(/'/g, "\\'")}')" class="w-full mt-3 bg-[#3b82f6] hover:bg-blue-600 text-white py-2.5 rounded-lg text-xs font-bold cursor-pointer transition">
                                         <i class="fa-solid fa-circle-play mr-1.5"></i>Stream Dynamic Video
                                     </button>
                                 </div>
                             `;
                         }).join('');
-                    } else if(currentActiveContentTypeTab === "DppQuiz") {
-                        displayTabSlot.innerHTML = array.map(q => `
-                            <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex flex-col justify-between">
-                                <h4 class="text-xs font-bold text-gray-200 font-poppins line-clamp-2">${q.title || 'Interactive Evaluation Module'}</h4>
-                                <button onclick="alert('Quiz system operational connection deployed successfully.')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white py-2.5 rounded-lg text-[11px] font-bold transition cursor-pointer">Launch Dynamic MCQ Arena</button>
+                    } else {
+                        displayTabSlot.innerHTML = array.map(doc => `
+                            <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex items-center justify-between">
+                                <div class="flex items-center space-x-3 overflow-hidden">
+                                    <i class="fa-solid fa-file-pdf text-red-500 text-xl shrink-0"></i>
+                                    <h4 class="text-xs font-bold text-gray-200 truncate font-poppins">${doc.topic || 'Document Data Sheet'}</h4>
+                                </div>
+                                <button onclick="window.open('${doc.attachmentSheetsDetails?.attachmentUrl || '#'}', '_blank')" class="bg-[#1f293d] hover:bg-[#3b82f6] text-white p-2.5 rounded-lg text-xs transition cursor-pointer shrink-0 ml-2"><i class="fa-solid fa-download"></i></button>
                             </div>
                         `).join('');
-                    } else {
-                        displayTabSlot.innerHTML = array.map(doc => {
-                            const sheetUrl = doc.attachmentSheetsDetails?.attachmentUrl || doc.url || '#';
-                            return `
-                                <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex items-center justify-between">
-                                    <div class="flex items-center space-x-3 overflow-hidden">
-                                        <i class="fa-solid fa-file-pdf text-red-500 text-xl shrink-0"></i>
-                                        <h4 class="text-xs font-bold text-gray-200 truncate font-poppins">${doc.title || doc.topic || 'Document Data Sheet'}</h4>
-                                    </div>
-                                    <button onclick="window.open('${sheetUrl}', '_blank')" class="bg-[#1f293d] hover:bg-[#3b82f6] text-white p-2.5 rounded-lg text-xs transition cursor-pointer shrink-0 ml-2"><i class="fa-solid fa-download"></i></button>
-                                </div>
-                            `;
-                        }).join('');
                     }
                 } else {
-                    displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No compiled assets published inside this segment grid channel.</div>`;
+                    displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No assets registered inside this module layer index.</div>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -403,11 +486,6 @@
                 if(!json.success || !json.data || !json.data.url) throw new Error("Manifest asset interception mapping dropped.");
 
                 let baseManifestTargetUrl = json.data.url + (json.data.signedUrl || "");
-                
-                // Fallback proxy injection if explicit endpoint conversion loop active
-                if(json.data.m3u8_url) {
-                    baseManifestTargetUrl = json.data.m3u8_url;
-                }
 
                 shakaPlayerInstanceInstance.getNetworkingEngine().registerRequestFilter((type, request) => {
                     if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT && json.data.signedUrl) {
@@ -420,9 +498,36 @@
                 });
 
                 await shakaPlayerInstanceInstance.load(baseManifestTargetUrl);
+                fetchLectureWhiteboardSlidesData(contentId);
             } catch(error) {
-                alert("Player Native Framework Link Error: " + error.message);
+                alert("Player Native Link Context Error: " + error.message);
             }
+        }
+
+        async function fetchLectureWhiteboardSlidesData(scheduleId) {
+            slidesListContainer.innerHTML = '';
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/Schedule?BatchId=${currentActiveBatchId}&SubjectId=${currentActiveSubjectSlug}&ContentId=${scheduleId}`);
+                const json = await res.json();
+                if (json.success && json.data && json.data.slides && json.data.slides.length > 0) {
+                    slidesListContainer.innerHTML = json.data.slides.map(slide => {
+                        const absoluteUrl = slide.img.baseUrl + slide.img.key;
+                        const targetTime = parseFloat(slide.timeStamp || 0);
+                        const mins = Math.floor(targetTime / 60);
+                        const secs = Math.floor(targetTime % 60).toString().padStart(2, '0');
+                        return `
+                            <div onclick="document.getElementById('nativeVideoPlayer').currentTime = ${targetTime}" class="bg-[#0b111e] border border-[#1f293d] p-1.5 rounded-lg flex flex-col space-y-1.5 cursor-pointer hover:border-[#3b82f6] transition shadow-inner">
+                                <div class="w-full h-24 rounded overflow-hidden relative bg-black">
+                                    <img src="${absoluteUrl}" class="w-full h-full object-contain" onerror="this.src='https://via.placeholder.com/200x120?text=Slide'">
+                                    <span class="absolute top-1 left-1 bg-black/80 text-[8px] font-bold text-[#3b82f6] px-1.5 py-0.5 rounded border border-[#3b82f6]/10">${mins}:${secs}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No whiteboard snapshots index.</p>`;
+                }
+            } catch(e){}
         }
 
         toggleSlidesViewBtn.addEventListener('click', () => {
