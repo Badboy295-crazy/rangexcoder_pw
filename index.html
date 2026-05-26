@@ -80,7 +80,7 @@
         <div id="viewBatchInternal" class="app-screen hidden space-y-5">
             <div class="bg-[#111827] p-5 rounded-xl border border-[#1f293d]">
                 <h2 class="text-xl font-bold text-white font-poppins" id="internalBatchTitle">Subjects Directories</h2>
-                <p class="text-xs text-gray-400 mt-1">Select structured parameters to explore subject catalogs.</p>
+                <p class="text-xs text-gray-400 mt-1">Explore subject modules inside selected catalog branch.</p>
             </div>
             <div id="subjectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
         </div>
@@ -109,7 +109,7 @@
         <div id="viewTheatricalPlayer" class="absolute inset-0 bg-black z-50 flex flex-col hidden app-screen">
             <div class="bg-[#111827] border-b border-[#1f293d] px-4 py-3 flex items-center justify-between shrink-0">
                 <button id="closePlayerBtn" class="text-white hover:text-red-400 font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition">
-                    <i class="fa-solid fa-arrow-left text-sm"></i> <span>Close Player</span>
+                    <i class="fa-solid fa-arrow-left text-sm"></i> <span>Close Arena</span>
                 </button>
                 <h3 id="playerLectureTitleHeader" class="text-xs font-medium text-gray-300 truncate max-w-md px-2">Streaming Track Asset...</h3>
                 <button id="toggleSlidesViewBtn" class="bg-[#1f293d] border border-[#2d3748] text-[#3b82f6] px-3 py-1.5 rounded-md text-xs font-bold hover:bg-[#2d3748] transition cursor-pointer">
@@ -132,7 +132,7 @@
 
         <div id="loadingIndicator" class="hidden py-12 text-center flex flex-col items-center justify-center space-y-2">
             <div class="w-6 h-6 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hydrating RangeXCoder System...</p>
+            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hydrating RangeXCoder Pipeline...</p>
         </div>
 
     </main>
@@ -142,24 +142,23 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                     <div class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></div>
-                    <h3 class="font-bold text-white text-sm font-poppins">OTP Authentication Terminal</h3>
+                    <h3 class="font-bold text-white text-sm font-poppins">Authentication Core Link Tunnel</h3>
                 </div>
                 <button onclick="toggleLoginModal(false)" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs text-gray-400 leading-relaxed">Bhai yahan apna phone no. aur received OTP bhej kar server browser ko instantly dynamic sync kar sakte ho.</p>
             
             <div id="phoneNodeArea" class="space-y-3">
-                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 1: Enter Registered Phone Number</label>
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 1: Enter Phone Number</label>
                 <div class="flex space-x-2">
-                    <input type="text" id="inputUserMobile" placeholder="Enter 10 Digit No. (e.g. 8853817652)" class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
+                    <input type="text" id="inputUserMobile" placeholder="Enter 10 digit number..." class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
                     <button onclick="triggerTunnelSendOtp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 rounded-lg transition shrink-0 cursor-pointer">Get OTP</button>
                 </div>
             </div>
 
             <div id="otpNodeArea" class="space-y-3 hidden">
-                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 2: Enter OTP Validation Key</label>
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 2: Enter OTP Verification Key</label>
                 <div class="flex space-x-2">
-                    <input type="text" id="inputUserOtp" placeholder="Enter OTP Verification Code" class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
+                    <input type="text" id="inputUserOtp" placeholder="Enter OTP code..." class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
                     <button onclick="triggerTunnelVerifyOtp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 rounded-lg transition shrink-0 cursor-pointer">Verify & Core Link</button>
                 </div>
             </div>
@@ -202,8 +201,9 @@
 
         async function triggerTunnelSendOtp() {
             const mobile = document.getElementById('inputUserMobile').value;
-            if(!mobile) return alert("Please type structural valid phone connection code.");
-            updateStatusLabel("Dispatching OTP route connection...");
+            if(!mobile || mobile.trim().length < 10) return alert("Please input a valid 10-digit system network parameter.");
+            updateStatusLabel("Evaluating and dispatching dynamic OTP route connection...");
+            
             try {
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/auth/send-otp`, {
                     method: 'POST',
@@ -213,31 +213,33 @@
                 const data = await res.json();
                 if(data.success) {
                     document.getElementById('otpNodeArea').classList.remove('hidden');
-                    updateStatusLabel("OTP request triggered! Enter code key below.");
+                    updateStatusLabel("OTP token sent successfully! Verify registration code key below.");
                 } else {
-                    updateStatusLabel("Error: " + data.error);
+                    updateStatusLabel("Error response: " + (data.message || "Failed execution loop"));
                 }
-            } catch(e) { updateStatusLabel("Bridge connection lost."); }
+            } catch(e) { updateStatusLabel("Visual tunnel communication pipeline dropped."); }
         }
 
         async function triggerTunnelVerifyOtp() {
+            const mobile = document.getElementById('inputUserMobile').value;
             const otp = document.getElementById('inputUserOtp').value;
-            if(!otp) return alert("Please supply OTP digit parameters.");
-            updateStatusLabel("Verifying cryptographic credentials inside terminal context...");
+            if(!otp) return alert("Please supply active OTP validation code.");
+            updateStatusLabel("Submitting cryptographic token credentials to core terminal map...");
+            
             try {
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/auth/verify-otp`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ otp })
+                    body: JSON.stringify({ mobile, otp })
                 });
                 const data = await res.json();
                 if(data.success) {
-                    updateStatusLabel("Authentication Linked Successfully! Refreshing system matrix...");
+                    updateStatusLabel("Ecosystem link successful! Hydrating custom user profile data grid...");
                     setTimeout(() => { toggleLoginModal(false); loadMainBatchesData(false); }, 1500);
                 } else {
-                    updateStatusLabel("Verification failed: " + data.error);
+                    updateStatusLabel("Validation failed: " + (data.message || "Invalid OTP code key"));
                 }
-            } catch(e) { updateStatusLabel("Pipeline link corrupted."); }
+            } catch(e) { updateStatusLabel("Bridge connection execution loop interrupted."); }
         }
 
         function updateStatusLabel(msg) {
@@ -273,7 +275,21 @@
             if (!appendMode) { gridBatches.innerHTML = ''; currentBatchesPage = 1; }
             elementLoading.classList.remove('hidden');
             
-            // FIXED: Target mapping exactly real active API log paths
+            // PRIORITY OPTIMIZATION: Try fetching enrolled profile batches from AboutMe first
+            try {
+                const profileResponse = await fetch(`${LOCAL_SERVER_ROOT}/api/AboutMe`);
+                const profileJson = await profileResponse.json();
+                if(profileJson.success && profileJson.enrolledBatches && profileJson.enrolledBatches.length > 0) {
+                    renderBatchCardsToGrid(profileJson.enrolledBatches, appendMode);
+                    btnLoadMoreBatches.classList.add('hidden');
+                    elementLoading.classList.add('hidden');
+                    return;
+                }
+            } catch(profileErr) {
+                console.log("[Ecosystem Notice] Public stream active or session unauthenticated.");
+            }
+
+            // Fallback: If not logged in, trigger public AllBatches endpoint logs
             let targetApiUrl = `${LOCAL_SERVER_ROOT}/api/AllBatches?page=${currentBatchesPage}`;
             if(activeSearchQueryString.trim() !== "") {
                 targetApiUrl = `${LOCAL_SERVER_ROOT}/api/searchBatch?name=${encodeURIComponent(activeSearchQueryString)}&page=${currentBatchesPage}`;
@@ -287,12 +303,12 @@
                     if(json.data.length < 9) btnLoadMoreBatches.classList.add('hidden');
                     else btnLoadMoreBatches.classList.remove('hidden');
                 } else {
-                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online batch items synchronized inside ecosystem. Please execute OTP login connector terminal above.</p>`;
+                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online records synced. Please launch the OTP terminal connection link above.</p>`;
                     btnLoadMoreBatches.classList.add('hidden');
                 }
             } catch(e) {
                 console.error(e);
-            } finally { elementLoading.classList.add('hidden'); }
+            } military { elementLoading.classList.add('hidden'); }
         }
 
         btnLoadMoreBatches.addEventListener('click', () => {
@@ -311,18 +327,20 @@
 
         function renderBatchCardsToGrid(batchesArray, appendMode = false) {
             const htmlString = batchesArray.map(b => {
-                const exactId = b._id || b.batchId;
+                const exactId = b.batchId || b._id;
+                const finalTitleName = b.batchName || b.name || 'Structural Track Core';
+                const thumb = b.batchImage || 'https://via.placeholder.com/400x220?text=RangeXCoder+Asset';
                 return `
                     <div class="pw-card p-4 flex flex-col justify-between relative">
                         <div class="w-full h-44 bg-[#0b111e] rounded-lg overflow-hidden mb-3 border border-[#1f293d]/40">
-                            <img src="${b.batchImage || 'https://via.placeholder.com/400x220?text=RangeXCoder+Asset'}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x220?text=RangeXCoder+Stream'">
+                            <img src="${thumb}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x220?text=RangeXCoder+Stream'">
                         </div>
                         <div class="space-y-1 flex-1 flex flex-col justify-between">
                             <div>
                                 <span class="text-[9px] font-bold uppercase text-[#3b82f6] bg-[#3b82f6]/5 px-2 py-0.5 rounded border border-[#3b82f6]/10 inline-block">${b.language || 'Hinglish'}</span>
-                                <h3 class="text-xs font-bold text-white line-clamp-2 pt-1 font-poppins">${b.batchName}</h3>
+                                <h3 class="text-xs font-bold text-white line-clamp-2 pt-1 font-poppins">${finalTitleName}</h3>
                             </div>
-                            <button onclick="loadBatchSubjects('${exactId}', '${b.batchName.replace(/'/g, "\\'")}')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white font-bold text-[11px] py-2.5 rounded-lg border border-[#2d3748] cursor-pointer transition">
+                            <button onclick="loadBatchSubjects('${exactId}', '${finalTitleName.replace(/'/g, "\\'")}')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white font-bold text-[11px] py-2.5 rounded-lg border border-[#2d3748] cursor-pointer transition">
                                 <i class="fa-solid fa-folder-open mr-1.5"></i>Launch Subjects Arena
                             </button>
                         </div>
@@ -355,7 +373,7 @@
                         `;
                     }).join('');
                 } else {
-                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No modules found inside directory mapping.</p>`;
+                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No structural modules populated inside branch node mapping.</p>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -383,7 +401,7 @@
                         `;
                     }).join('');
                 } else {
-                    gridFolderTopics.innerHTML = `<p class="text-center text-xs text-gray-500 col-span-full py-12">No explicit topics referenced at node pointer.</p>`;
+                    gridFolderTopics.innerHTML = `<p class="text-center text-xs text-gray-500 col-span-full py-12">No dynamic topic tracks compiled.</p>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -404,11 +422,11 @@
                         displayTabSlot.innerHTML = array.map(q => `
                             <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex flex-col justify-between">
                                 <h4 class="text-xs font-bold text-gray-200 font-poppins line-clamp-2">${q.title || 'Interactive Evaluation Module'}</h4>
-                                <button onclick="alert('Quiz layout connection ready.')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white py-2.5 rounded-lg text-[11px] font-bold transition cursor-pointer">Launch Dynamic MCQ Arena</button>
+                                <button onclick="alert('Interactive quiz arena framework active.')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white py-2.5 rounded-lg text-[11px] font-bold transition cursor-pointer">Launch Dynamic MCQ Arena</button>
                             </div>
                         `).join('');
                     } else {
-                        displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No active dynamic quiz data compiled inside module structure.</div>`;
+                        displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No active dynamic quiz modules published inside index channel.</div>`;
                     }
                 } catch(e){} finally { elementLoading.classList.add('hidden'); }
                 return;
@@ -448,7 +466,7 @@
                         `).join('');
                     }
                 } else {
-                    displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No assets registered inside this module layer index.</div>`;
+                    displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No compiled assets registered at node index segment.</div>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -483,7 +501,7 @@
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/video-stream?batchId=${currentActiveBatchId}&subjectId=${currentActiveSubjectSlug}&contentId=${contentId}`);
                 const json = await res.json();
                 
-                if(!json.success || !json.data || !json.data.url) throw new Error("Manifest asset interception mapping dropped.");
+                if(!json.success || !json.data || !json.data.url) throw new Error("Manifest track generation signature expired.");
 
                 let baseManifestTargetUrl = json.data.url + (json.data.signedUrl || "");
 
@@ -500,7 +518,7 @@
                 await shakaPlayerInstanceInstance.load(baseManifestTargetUrl);
                 fetchLectureWhiteboardSlidesData(contentId);
             } catch(error) {
-                alert("Player Native Link Context Error: " + error.message);
+                alert("Player Link Validation Error: " + error.message);
             }
         }
 
@@ -525,24 +543,10 @@
                         `;
                     }).join('');
                 } else {
-                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No whiteboard snapshots index.</p>`;
+                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No snapshots indexed.</p>`;
                 }
             } catch(e){}
         }
-
-        toggleSlidesViewBtn.addEventListener('click', () => {
-            if (!isSlidesDrawerOpen) {
-                slidesDrawer.style.width = "260px";
-                slidesDrawer.style.borderColor = "#1f293d";
-                toggleSlidesViewBtn.className = "bg-[#3b82f6] text-white px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer";
-                isSlidesDrawerOpen = true;
-            } else {
-                slidesDrawer.style.width = "0px";
-                slidesDrawer.style.borderColor = "transparent";
-                toggleSlidesViewBtn.className = "bg-[#1f293d] border border-[#2d3748] text-[#3b82f6] px-3 py-1.5 rounded-md text-xs font-bold hover:bg-[#2d3748] transition cursor-pointer";
-                isSlidesDrawerOpen = false;
-            }
-        });
 
         document.getElementById('closePlayerBtn').addEventListener('click', async () => {
             if (shakaPlayerInstanceInstance) { 
