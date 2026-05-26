@@ -4,7 +4,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
-// INTEGRATED PREMIUM STEALTH ENGINE SETUP
+// PREMIUM STEALTH ENGINE MASK INTEGRATION
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
@@ -19,9 +19,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname)));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 
 const savedUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 let globalBrowser = null;
@@ -29,7 +27,7 @@ let globalPage = null;
 
 async function getSafeActivePage() {
     if (!globalBrowser || !globalBrowser.isConnected()) {
-        console.log("[RangeXCoder Engine] Spawning premium anti-bot stealth browser instance...");
+        console.log("[RangeXCoder Engine] Spawning premium anti-bot stealth browser space...");
         globalBrowser = await puppeteer.launch({
             headless: true,
             executablePath: puppeteer.executablePath(),
@@ -54,12 +52,17 @@ async function getSafeActivePage() {
         
         await globalPage.setUserAgent(savedUserAgent);
         await globalPage.setViewport({ width: 1920, height: 1080 });
-        
-        // Initial clean redirect setup to set secure domain foundation origin context
+
+        await globalPage.evaluateOnNewDocument(() => {
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+            window.chrome = { runtime: {} };
+        });
+
         await globalPage.goto(TARGET_ROOT, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
     }
 
-    // Dynamic Cookie Injection: Apply saved range token text straight into active session
+    // Dynamic Token Vault Validator Injection
     if (fs.existsSync(TOKEN_FILE_PATH)) {
         const activeTokenString = fs.readFileSync(TOKEN_FILE_PATH, 'utf8').trim();
         if (activeTokenString.length > 10) {
@@ -74,21 +77,45 @@ async function getSafeActivePage() {
             });
         }
     }
-    
     return globalPage;
 }
 
+// 🌐 LIVE CAPTCHA WIREFRAME INTERACTION ENDPOINTS
+app.get('/api/admin/screenshot', async (req, res) => {
+    try {
+        const page = await getSafeActivePage();
+        // Take a lightweight optimized snapshot image of the current server page content
+        const buf = await page.screenshot({ type: 'jpeg', quality: 65 });
+        res.type('image/jpeg');
+        res.send(buf);
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.post('/api/admin/click', async (req, res) => {
+    const { x, y } = req.body;
+    try {
+        const page = await getSafeActivePage();
+        console.log(`[RangeXCoder Click Tunnel] Clicking on absolute cloud matrix nodes: X=${x}, Y=${y}`);
+        await page.mouse.click(parseInt(x), parseInt(y));
+        res.json({ success: true });
+    } catch(e) { res.status(500).json({ success: false, error: e.message }); }
+});
+
+app.get('/api/admin/goto-home', async (req, res) => {
+    try {
+        const page = await getSafeActivePage();
+        await page.goto(`${TARGET_ROOT}/study/batches`, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+        res.json({ success: true });
+    } catch(e) { res.status(500).json({ success: false }); }
+});
+
 app.post('/api/admin/set-token', (req, res) => {
     const { token } = req.body;
-    if(!token) return res.status(400).json({ success: false, error: "Token string parameter empty." });
-    
+    if(!token) return res.status(400).json({ success: false, error: "Token value empty." });
     try {
         fs.writeFileSync(TOKEN_FILE_PATH, token.trim(), 'utf8');
-        console.log("[RangeXCoder Vault] Token injected successfully!");
-        res.json({ success: true, message: "Token saved into persistent filesystem storage." });
-    } catch(e) {
-        res.status(500).json({ success: false, error: "Disk Write Error: " + e.message });
-    }
+        res.json({ success: true });
+    } catch(e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
 // Highly responsive automation click handler to wipe out Apple Selection Modal (Untouched)
@@ -111,12 +138,10 @@ async function autoBypassApplePopup(page) {
 // Video streaming crawler handler (Untouched)
 app.get('/video-stream', async (req, res) => {
     const { batchId, subjectId, contentId } = req.query;
-    if (!batchId || !contentId) return res.status(400).json({ success: false, error: "Missing identity tags." });
-
+    if (!batchId || !contentId) return res.status(400).json({ success: false, error: "Missing tags." });
     try {
         const page = await getSafeActivePage();
         const targetWatchUrl = `${TARGET_ROOT}/study/batches/${batchId}/subjects/${subjectId || 'all'}/contents/${contentId}/watch`;
-        
         const targetPage = await globalBrowser.newPage();
         await targetPage.setUserAgent(savedUserAgent);
         
@@ -138,59 +163,53 @@ app.get('/video-stream', async (req, res) => {
         });
 
         await targetPage.goto(targetWatchUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
-
         for(let i = 0; i < 15; i++) {
             await new Promise(r => setTimeout(r, 300));
             await autoBypassApplePopup(targetPage);
             if (interceptedData) break;
         }
-
         await targetPage.close();
         if (interceptedData) res.json({ success: true, data: interceptedData });
-        else res.status(404).json({ success: false, error: "Token signature or manifest channel dropped." });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
+        else res.status(404).json({ success: false, error: "Stream dropped." });
+    } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// BULLETPROOF FIXED PROXY ROUTE: Executes domestic safe fetch INSIDE a fully verified stealth page context
+// CLOUDFLARE SECURITY TUNNEL WITH AUTOMATIC CAPTCHA CHANNELS INTERCEPTION
 app.all('/api/*', async (req, res) => {
     const targetUrl = `${TARGET_ROOT}${req.url}`;
     try {
         const page = await getSafeActivePage();
-        
-        // Execute request INSIDE the authenticated real stealth instance to pass Cloudflare smoothly
         const result = await page.evaluate(async (url, method, bodyString) => {
             try {
                 const fetchOptions = { 
                     method: method, 
                     credentials: "include",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    }
+                    headers: { "Accept": "application/json", "Content-Type": "application/json" }
                 };
-                if (method !== "GET" && bodyString) {
-                    fetchOptions.body = bodyString;
-                }
+                if (method !== "GET" && bodyString) fetchOptions.body = bodyString;
+                
                 const response = await fetch(url, fetchOptions);
                 const contentType = response.headers.get("content-type") || "";
+                
+                // Intercept if cloudflare protection code captures the layer
+                if (response.status === 403 || contentType.includes("text/html")) {
+                    const textContent = await response.text();
+                    if(textContent.includes("blocked") || textContent.includes("cf-wrapper") || textContent.includes("Attention Required")) {
+                        return { status: 403, isCloudflare: true, isJson: true, data: { isCloudflare: true, error: "Bypass required" } };
+                    }
+                }
+                
                 if (contentType.includes("application/json")) {
                     return { status: response.status, isJson: true, data: await response.json() };
                 } else {
                     return { status: response.status, isJson: false, data: await response.text() };
                 }
-            } catch (err) {
-                return { status: 500, isJson: true, data: { success: false, error: err.message } };
-            }
+            } catch (err) { return { status: 500, isJson: true, data: { success: false, error: err.message } }; }
         }, targetUrl, req.method, req.method !== "GET" ? JSON.stringify(req.body) : null);
 
         if (result.isJson) res.status(result.status).json(result.data);
         else res.status(result.status).send(result.data);
-    } catch (e) {
-        console.error("[RangeXCoder Tunnel API Error]", e.message);
-        res.status(500).json({ success: false, error: "Cloudflare stealth tunnel bridge error: " + e.message });
-    }
+    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Stealth Tunnel Active on port: ${PORT}`));
+app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Tunnel Active on port: ${PORT}`));
