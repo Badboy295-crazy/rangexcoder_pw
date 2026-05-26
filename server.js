@@ -1,278 +1,565 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const path = require('path');
-const fs = require('fs');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-const TARGET_ROOT = "https://pwthor.live";
-
-// Storage directory to keep your logged-in session safe across server restarts
-const SESSION_DATA_DIR = path.join(__dirname, 'range_session_vault');
-if (!fs.existsSync(SESSION_DATA_DIR)) {
-    fs.mkdirSync(SESSION_DATA_DIR, { recursive: true });
-}
-
-app.use(cors({ origin: "*", credentials: true }));
-app.use(express.json());
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname)));
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-const savedUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
-let globalBrowser = null;
-let globalPage = null;
-let isEngineReady = false;
-
-// Fallback Hardcoded Initial Matrix Token if cookie fallback needed
-const backupSessionCookies = [
-    {
-        "domain": "pwthor.live",
-        "expirationDate": 1787294281.354491,
-        "hostOnly": true,
-        "httpOnly": true,
-        "name": "auth_token",
-        "path": "/",
-        "sameSite": "no_restriction",
-        "secure": true,
-        "session": false,
-        "storeId": "0",
-        "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGUiOiI4ODUzODE3NjUyIiwibmFtZSI6IkFtYmVyIEthc2F1ZGhhbiIsImlhdCI6MTc3OTUxODI4NSwiZXhwIjoxNzg3Mjk0Mjg1fQ.wV224l42kC5AGhfoaRc1kIWpkb0S_v3Gois6dYv-7tE"
-    }
-];
-
-async function getSafeActivePage() {
-    if (!globalBrowser || !globalBrowser.isConnected()) {
-        console.log("[RangeXCoder Engine] Spawning persistent Docker-compatible browser context...");
-        globalBrowser = await puppeteer.launch({
-            headless: true,
-            executablePath: puppeteer.executablePath(),
-            userDataDir: SESSION_DATA_DIR, // PERSISTENT SYSTEM: Login state keeps saved inside container drive volumes
-            args: [
-                '--no-sandbox', 
-                '--disable-setuid-sandbox',
-                '--disable-blink-features=AutomationControlled',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--no-zygote',
-                '--single-process',
-                '--disable-web-security',
-                '--window-size=1920,1080'
-            ]
-        });
-        globalPage = null;
-    }
-
-    if (!globalPage || globalPage.isClosed()) {
-        const pages = await globalBrowser.pages();
-        globalPage = pages.length > 0 ? pages[0] : await globalBrowser.newPage();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RangeXCoder - Core Study Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
         
-        await globalPage.setUserAgent(savedUserAgent);
-        await globalPage.setViewport({ width: 1920, height: 1080 });
-
-        await globalPage.evaluateOnNewDocument(() => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-            window.chrome = { runtime: {} };
-        });
-
-        // Initialize connection baseline mapping
-        await globalPage.goto(TARGET_ROOT, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
-        
-        // Secondary safety guard: check if already authenticated by tracking storage elements
-        const currentCookies = await globalPage.cookies();
-        const hasAuthCookie = currentCookies.some(c => c.name === 'auth_token');
-        
-        if (!hasAuthCookie && backupSessionCookies.length > 0) {
-            console.log("[RangeXCoder Engine] Hydrating default vault tokens fallback parameters...");
-            const sanitized = backupSessionCookies.map(c => ({
-                name: c.name,
-                value: c.value,
-                domain: '.pwthor.live',
-                path: c.path || '/',
-                httpOnly: c.httpOnly ?? true,
-                secure: c.secure ?? true,
-                sameSite: 'None'
-            }));
-            await globalPage.setCookie(...sanitized);
+        body {
+            background-color: #0b111e;
+            color: #f3f4f6;
+            font-family: "Inter", sans-serif;
+            margin: 0;
+            padding: 0;
         }
-    }
-    return globalPage;
-}
-
-// 🌐 LIVE OPT CONNECTION ROUTERS
-app.post('/auth/send-otp', async (req, res) => {
-    const { mobile } = req.body;
-    if(!mobile) return res.status(400).json({ success: false, error: "Mobile number missing" });
-    
-    try {
-        const page = await getSafeActivePage();
-        console.log(`[RangeXCoder Visual Tunnel] Navigating to target authentication portal for: ${mobile}`);
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0b111e; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         
-        await page.goto(`${TARGET_ROOT}/auth/login`, { waitUntil: 'domcontentloaded', timeout: 45000 });
-        await page.waitForSelector('input[type="text"], input[placeholder*="mobile"]', { timeout: 10000 });
+        .pw-card {
+            background-color: #111827;
+            border: 1px solid #1f293d;
+            border-radius: 12px;
+            transition: all 0.2s ease-in-out;
+        }
+        .pw-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(59,130,246,0.25);
+        }
+        .subtab-active {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <header class="bg-[#111827] border-b border-[#1f293d] px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+        <div class="flex items-center space-x-4">
+            <button id="globalBackBtn" class="bg-[#1f293d] hover:bg-[#1e293b] text-gray-200 text-xs font-bold px-4 py-2 rounded-lg border border-[#1f293d] transition cursor-pointer flex items-center hidden">
+                <i class="fa-solid fa-arrow-left mr-2"></i>Back
+            </button>
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-base shadow-md">RX</div>
+                <span class="text-xl font-black tracking-tight text-white font-poppins">RangeXCoder</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleLoginModal(true)" class="bg-gradient-to-r from-amber-600 to-amber-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow hover:opacity-90 transition cursor-pointer flex items-center">
+                <i class="fa-solid fa-key mr-2"></i> OTP Authentication Tunnel
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6" id="mainContent">
+
+        <div id="viewAllBatches" class="space-y-6 app-screen">
+            <div class="bg-[#111827] p-5 rounded-xl border border-[#1f293d] space-y-4 shadow-sm">
+                <h2 class="text-base font-bold text-white font-poppins">My Batches Catalogs</h2>
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-500 text-sm"></i>
+                    <input type="text" id="batchSearchBar" placeholder="Search your structural batch nodes..." class="w-full bg-[#0b111e] border border-[#1f293d] rounded-lg pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-[#3b82f6] text-white transition placeholder-gray-500 font-medium">
+                </div>
+            </div>
+
+            <div id="batchesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+            
+            <div id="paginationLoaderArea" class="flex justify-center pt-2">
+                <button id="btnLoadMoreBatches" class="bg-[#111827] hover:bg-[#1f293d] text-gray-300 font-bold text-xs px-6 py-3 rounded-lg border border-[#1f293d] transition cursor-pointer">
+                    Load More Batches <i class="fa-solid fa-arrow-down ml-1.5"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="viewBatchInternal" class="app-screen hidden space-y-5">
+            <div class="bg-[#111827] p-5 rounded-xl border border-[#1f293d]">
+                <h2 class="text-xl font-bold text-white font-poppins" id="internalBatchTitle">Subjects Directories</h2>
+                <p class="text-xs text-gray-400 mt-1">Explore subject modules inside selected catalog branch.</p>
+            </div>
+            <div id="subjectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+
+        <div id="viewSubjectTopics" class="space-y-4 app-screen hidden">
+            <div class="bg-[#111827] p-4 rounded-xl border border-[#1f293d]">
+                <h2 class="text-lg font-bold text-white font-poppins" id="topicsHeaderTitle">Chapters Structure Index</h2>
+            </div>
+            <div id="topicsFolderGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+        <div id="viewTopicTabs" class="space-y-5 app-screen hidden">
+            <div class="bg-[#111827] p-4 rounded-xl border border-[#1f293d]">
+                <h2 class="text-base font-bold text-white px-1 mb-4 font-poppins" id="topicTabsMainTitle">Chapter Resource Modules</h2>
+                <div class="flex flex-wrap gap-2 text-center">
+                    <button data-type="videos" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px] subtab-active">Lectures</button>
+                    <button data-type="notes" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px]">Notes</button>
+                    <button data-type="DppNotes" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px]">DPP PDF</button>
+                    <button data-type="DppVideos" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px]">DPP Video</button>
+                    <button data-type="DppQuiz" class="subtab-btn px-4 py-2.5 text-xs font-bold rounded-lg bg-[#1e293b] text-gray-300 transition cursor-pointer flex-1 min-w-[100px]">DPP Quiz</button>
+                </div>
+            </div>
+            <div id="tabContentDisplayGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+
+        <div id="viewTheatricalPlayer" class="absolute inset-0 bg-black z-50 flex flex-col hidden app-screen">
+            <div class="bg-[#111827] border-b border-[#1f293d] px-4 py-3 flex items-center justify-between shrink-0">
+                <button id="closePlayerBtn" class="text-white hover:text-red-400 font-bold text-xs flex items-center space-x-1.5 cursor-pointer transition">
+                    <i class="fa-solid fa-arrow-left text-sm"></i> <span>Close Arena</span>
+                </button>
+                <h3 id="playerLectureTitleHeader" class="text-xs font-medium text-gray-300 truncate max-w-md px-2">Streaming Track Asset...</h3>
+                <button id="toggleSlidesViewBtn" class="bg-[#1f293d] border border-[#2d3748] text-[#3b82f6] px-3 py-1.5 rounded-md text-xs font-bold hover:bg-[#2d3748] transition cursor-pointer">
+                    <i class="fa-solid fa-chalkboard-user mr-1"></i>Whiteboard Index
+                </button>
+            </div>
+
+            <div class="flex-1 flex overflow-hidden relative bg-black">
+                <div class="flex-1 h-full flex items-center justify-center relative" id="videoViewportContainer">
+                    <video id="nativeVideoPlayer" class="w-full h-full" controls autoplay playsinline></video>
+                </div>
+                <div id="slidesDrawer" class="w-0 bg-[#111827] border-l border-transparent h-full flex flex-col overflow-y-auto transition-all duration-200 shrink-0">
+                    <div class="p-3 border-b border-[#1f293d] bg-[#0b111e] text-center">
+                        <span class="text-[10px] font-bold text-gray-400 tracking-wider uppercase">Slide Timestamps</span>
+                    </div>
+                    <div id="slidesListContainer" class="p-3 space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingIndicator" class="hidden py-12 text-center flex flex-col items-center justify-center space-y-2">
+            <div class="w-6 h-6 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hydrating RangeXCoder Pipeline...</p>
+        </div>
+
+    </main>
+
+    <div id="authTunnelModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-[#111827] border border-[#1f293d] p-6 rounded-2xl max-w-md w-full space-y-5 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></div>
+                    <h3 class="font-bold text-white text-sm font-poppins">Authentication Core Link Tunnel</h3>
+                </div>
+                <button onclick="toggleLoginModal(false)" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div id="phoneNodeArea" class="space-y-3">
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 1: Enter Phone Number</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="inputUserMobile" placeholder="Enter 10 digit number..." class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
+                    <button onclick="triggerTunnelSendOtp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 rounded-lg transition shrink-0 cursor-pointer">Get OTP</button>
+                </div>
+            </div>
+
+            <div id="otpNodeArea" class="space-y-3 hidden">
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 2: Enter OTP Verification Key</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="inputUserOtp" placeholder="Enter OTP code..." class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
+                    <button onclick="triggerTunnelVerifyOtp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 rounded-lg transition shrink-0 cursor-pointer">Verify & Core Link</button>
+                </div>
+            </div>
+            <p id="authTerminalStatusMessage" class="text-[10px] text-amber-500 font-bold font-mono text-center bg-amber-500/5 py-2 rounded hidden border border-amber-500/10"></p>
+        </div>
+    </div>
+
+    <script>
+        let activeScreenId = "batches";
+        let previousScreensStack = [];
+        let currentActiveBatchId = "";
+        let currentActiveSubjectSlug = "";
+        let currentActiveTopicSlug = "";
+        let currentActiveContentTypeTab = "videos";
+        let shakaPlayerInstanceInstance = null;
+        let isSlidesDrawerOpen = false;
         
-        // Inject phone number directly into target browser frame input field
-        await page.evaluate((phone) => {
-            const input = document.querySelector('input[type="text"]') || document.querySelector('input[placeholder*="mobile"]');
-            if(input) {
-                input.value = phone;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }, mobile);
-        
-        // Instantly submit phone parameters to trigger OTP pathway lines
-        await page.evaluate(() => {
-            const buttons = Array.from(document.querySelectorAll('button'));
-            const sendBtn = buttons.find(b => b.innerText.toLowerCase().includes('otp') || b.innerText.toLowerCase().includes('login') || b.innerText.toLowerCase().includes('continue'));
-            if(sendBtn) sendBtn.click();
-        });
+        let currentBatchesPage = 1;
+        let activeSearchQueryString = "";
+        let globalDebounceSearchTimer = null;
 
-        res.json({ success: true, message: "OTP route executed inside container engine frame context." });
-    } catch(e) {
-        res.status(500).json({ success: false, error: e.message });
-    }
-});
+        const LOCAL_SERVER_ROOT = window.location.origin;
 
-app.post('/auth/verify-otp', async (req, res) => {
-    const { otp } = req.body;
-    if(!otp) return res.status(400).json({ success: false, error: "OTP value parameters blank." });
-    
-    try {
-        if(!globalPage || globalPage.isClosed()) throw new Error("Authentication flow context has timed out. Get OTP again.");
-        
-        // Enter received OTP parameters into responsive cloud Chromium view layout state
-        await globalPage.evaluate((otpKey) => {
-            const input = document.querySelector('input[type="number"]') || document.querySelector('input[placeholder*="otp"]') || document.querySelector('input');
-            if(input) {
-                input.value = otpKey;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }, otp);
+        const gridBatches = document.getElementById('batchesGrid');
+        const gridSubjects = document.getElementById('subjectsGrid');
+        const gridFolderTopics = document.getElementById('topicsFolderGrid');
+        const displayTabSlot = document.getElementById('tabContentDisplayGrid');
+        const slidesListContainer = document.getElementById('slidesListContainer');
+        const elementLoading = document.getElementById('loadingIndicator');
+        const btnGlobalBack = document.getElementById('globalBackBtn');
+        const slidesDrawer = document.getElementById('slidesDrawer');
+        const toggleSlidesViewBtn = document.getElementById('toggleSlidesViewBtn');
+        const batchSearchBar = document.getElementById('batchSearchBar');
+        const btnLoadMoreBatches = document.getElementById('btnLoadMoreBatches');
 
-        // Click verify execution handler key nodes
-        await globalPage.evaluate(() => {
-            const buttons = Array.from(document.querySelectorAll('button'));
-            const verifyBtn = buttons.find(b => b.innerText.toLowerCase().includes('verify') || b.innerText.toLowerCase().includes('submit') || b.innerText.toLowerCase().includes('login'));
-            if(verifyBtn) verifyBtn.click();
-        });
-
-        // Wait a few seconds to let cookie populate correctly
-        await new Promise(r => setTimeout(r, 4000));
-        await globalPage.goto(`${TARGET_ROOT}/study/batches`, { waitUntil: 'domcontentloaded', timeout: 25000 }).catch(() => {});
-        
-        res.json({ success: true, message: "Ecosystem identity validation linked completely." });
-    } catch(e) {
-        res.status(500).json({ success: false, error: e.message });
-    }
-});
-
-// Highly responsive automation click handler to wipe out Apple Selection Overlay Modal
-async function autoBypassApplePopup(page) {
-    try {
-        await page.evaluate(() => {
-            const layoutButtons = Array.from(document.querySelectorAll('button, div, a, span'));
-            const targetAppleElement = layoutButtons.find(el => {
-                const innerLabel = el.innerText ? el.innerText.toLowerCase() : '';
-                return innerLabel.includes('apple') || innerLabel.includes('ios') || innerLabel.includes('iphone');
-            });
-            if (targetAppleElement) {
-                targetAppleElement.click();
-                console.log("[RangeXCoder Automation] Instantly skipped Apple OS platform select modal.");
-            }
-        });
-    } catch (e) {}
-}
-
-// Video streaming crawler handler (Untouched)
-app.get('/video-stream', async (req, res) => {
-    const { batchId, subjectId, contentId } = req.query;
-    if (!batchId || !contentId) return res.status(400).json({ success: false, error: "Missing identity tags." });
-
-    try {
-        const page = await getSafeActivePage();
-        const targetWatchUrl = `${TARGET_ROOT}/study/batches/${batchId}/subjects/${subjectId || 'all'}/contents/${contentId}/watch`;
-        
-        const targetPage = await globalBrowser.newPage();
-        await targetPage.setUserAgent(savedUserAgent);
-        
-        // Synchronize authenticated cookies straight into target media streaming frames page context
-        const rootCookies = await page.cookies();
-        await targetPage.setCookie(...rootCookies);
-
-        let interceptedData = null;
-        await targetPage.setRequestInterception(true);
-        targetPage.on('request', request => request.continue());
-        targetPage.on('response', async response => {
-            const url = response.url();
-            if (url.includes('/api/v1/video/token') || url.includes('signedUrl') || url.includes('.mpd') || url.includes('.m3u8')) {
-                try {
-                    if ((response.headers()['content-type'] || '').includes('application/json')) {
-                        interceptedData = await response.json();
-                    }
-                } catch (e) {}
-            }
-        });
-
-        await targetPage.goto(targetWatchUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
-
-        for(let i = 0; i < 15; i++) {
-            await new Promise(r => setTimeout(r, 300));
-            await autoBypassApplePopup(targetPage);
-            if (interceptedData) break;
+        function toggleLoginModal(show) {
+            document.getElementById('authTunnelModal').classList.toggle('hidden', !show);
+            document.getElementById('authTerminalStatusMessage').classList.add('hidden');
         }
 
-        await targetPage.close();
-        if (interceptedData) res.json({ success: true, data: interceptedData });
-        else res.status(404).json({ success: false, error: "Token signature or manifest channel dropped." });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-// Secure Cloudflare Tunneling Proxy Pipeline Route Handler
-app.all('/api/*', async (req, res) => {
-    const targetUrl = `${TARGET_ROOT}${req.url}`;
-    try {
-        const page = await getSafeActivePage();
-        const result = await page.evaluate(async (url, method, bodyString) => {
+        async function triggerTunnelSendOtp() {
+            const mobile = document.getElementById('inputUserMobile').value;
+            if(!mobile || mobile.trim().length < 10) return alert("Please input a valid 10-digit system network parameter.");
+            updateStatusLabel("Evaluating and dispatching dynamic OTP route connection...");
+            
             try {
-                const fetchOptions = { 
-                    method: method, 
-                    credentials: "include",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    }
-                };
-                if (method !== "GET" && bodyString) {
-                    fetchOptions.body = bodyString;
-                }
-                const response = await fetch(url, fetchOptions);
-                const contentType = response.headers.get("content-type") || "";
-                if (contentType.includes("application/json")) {
-                    return { status: response.status, isJson: true, data: await response.json() };
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/auth/send-otp`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('otpNodeArea').classList.remove('hidden');
+                    updateStatusLabel("OTP token sent successfully! Verify registration code key below.");
                 } else {
-                    return { status: response.status, isJson: false, data: await response.text() };
+                    updateStatusLabel("Error response: " + (data.message || "Failed execution loop"));
                 }
-            } catch (err) {
-                return { status: 500, isJson: true, data: { success: false, error: err.message } };
+            } catch(e) { updateStatusLabel("Visual tunnel communication pipeline dropped."); }
+        }
+
+        async function triggerTunnelVerifyOtp() {
+            const mobile = document.getElementById('inputUserMobile').value;
+            const otp = document.getElementById('inputUserOtp').value;
+            if(!otp) return alert("Please supply active OTP validation code.");
+            updateStatusLabel("Submitting cryptographic token credentials to core terminal map...");
+            
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/auth/verify-otp`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile, otp })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    updateStatusLabel("Ecosystem link successful! Hydrating custom user profile data grid...");
+                    setTimeout(() => { toggleLoginModal(false); loadMainBatchesData(false); }, 1500);
+                } else {
+                    updateStatusLabel("Validation failed: " + (data.message || "Invalid OTP code key"));
+                }
+            } catch(e) { updateStatusLabel("Bridge connection execution loop interrupted."); }
+        }
+
+        function updateStatusLabel(msg) {
+            const el = document.getElementById('authTerminalStatusMessage');
+            el.innerText = msg;
+            el.classList.remove('hidden');
+        }
+
+        function navigateToScreen(screenId, saveHistory = true) {
+            if (saveHistory && activeScreenId !== screenId) previousScreensStack.push(activeScreenId);
+            activeScreenId = screenId;
+            document.querySelectorAll('.app-screen').forEach(el => el.classList.add('hidden'));
+
+            if(screenId === 'batches') document.getElementById('viewAllBatches').classList.remove('hidden');
+            else if(screenId === 'internal-subjects') document.getElementById('viewBatchInternal').classList.remove('hidden');
+            else if(screenId === 'subject-topics') document.getElementById('viewSubjectTopics').classList.remove('hidden');
+            else if(screenId === 'topic-subtabs') document.getElementById('viewTopicTabs').classList.remove('hidden');
+            else if(screenId === 'theatrical-player') document.getElementById('viewTheatricalPlayer').classList.remove('hidden');
+
+            if (screenId === 'theatrical-player') btnGlobalBack.classList.add('hidden');
+            else if (previousScreensStack.length > 0) btnGlobalBack.classList.remove('hidden');
+            else btnGlobalBack.classList.add('hidden');
+        }
+
+        btnGlobalBack.addEventListener('click', () => {
+            if (previousScreensStack.length > 0) {
+                const prev = previousScreensStack.pop();
+                navigateToScreen(prev, false);
             }
-        }, targetUrl, req.method, req.method !== "GET" ? JSON.stringify(req.body) : null);
+        });
 
-        if (result.isJson) res.status(result.status).json(result.data);
-        else res.status(result.status).send(result.data);
-    } catch (e) {
-        res.status(500).json({ success: false, error: "Cloudflare tunnel bridge failure: " + e.message });
-    }
-});
+        async function loadMainBatchesData(appendMode = false) {
+            if (!appendMode) { gridBatches.innerHTML = ''; currentBatchesPage = 1; }
+            elementLoading.classList.remove('hidden');
+            
+            // PRIORITY OPTIMIZATION: Try fetching enrolled profile batches from AboutMe first
+            try {
+                const profileResponse = await fetch(`${LOCAL_SERVER_ROOT}/api/AboutMe`);
+                const profileJson = await profileResponse.json();
+                if(profileJson.success && profileJson.enrolledBatches && profileJson.enrolledBatches.length > 0) {
+                    renderBatchCardsToGrid(profileJson.enrolledBatches, appendMode);
+                    btnLoadMoreBatches.classList.add('hidden');
+                    elementLoading.classList.add('hidden');
+                    return;
+                }
+            } catch(profileErr) {
+                console.log("[Ecosystem Notice] Public stream active or session unauthenticated.");
+            }
 
-// Fast engine trigger instantiation loop right after start commands
-(async () => { try { await getSafeActivePage(); isEngineReady = true; } catch(e){} })();
+            // Fallback: If not logged in, trigger public AllBatches endpoint logs
+            let targetApiUrl = `${LOCAL_SERVER_ROOT}/api/AllBatches?page=${currentBatchesPage}`;
+            if(activeSearchQueryString.trim() !== "") {
+                targetApiUrl = `${LOCAL_SERVER_ROOT}/api/searchBatch?name=${encodeURIComponent(activeSearchQueryString)}&page=${currentBatchesPage}`;
+            }
 
-app.listen(PORT, () => console.log(`[RangeXCoder Server] Operational Tunnel Gateway active on port: ${PORT}`));
+            try {
+                const res = await fetch(targetApiUrl);
+                const json = await res.json();
+                if(json.success && json.data) {
+                    renderBatchCardsToGrid(json.data, appendMode);
+                    if(json.data.length < 9) btnLoadMoreBatches.classList.add('hidden');
+                    else btnLoadMoreBatches.classList.remove('hidden');
+                } else {
+                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online records synced. Please launch the OTP terminal connection link above.</p>`;
+                    btnLoadMoreBatches.classList.add('hidden');
+                }
+            } catch(e) {
+                console.error(e);
+            } military { elementLoading.classList.add('hidden'); }
+        }
+
+        btnLoadMoreBatches.addEventListener('click', () => {
+            currentBatchesPage++;
+            loadMainBatchesData(true);
+        });
+
+        batchSearchBar.addEventListener('input', (e) => {
+            clearTimeout(globalDebounceSearchTimer);
+            activeSearchQueryString = e.target.value;
+            globalDebounceSearchTimer = setTimeout(() => {
+                currentBatchesPage = 1;
+                loadMainBatchesData(false);
+            }, 300);
+        });
+
+        function renderBatchCardsToGrid(batchesArray, appendMode = false) {
+            const htmlString = batchesArray.map(b => {
+                const exactId = b.batchId || b._id;
+                const finalTitleName = b.batchName || b.name || 'Structural Track Core';
+                const thumb = b.batchImage || 'https://via.placeholder.com/400x220?text=RangeXCoder+Asset';
+                return `
+                    <div class="pw-card p-4 flex flex-col justify-between relative">
+                        <div class="w-full h-44 bg-[#0b111e] rounded-lg overflow-hidden mb-3 border border-[#1f293d]/40">
+                            <img src="${thumb}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/400x220?text=RangeXCoder+Stream'">
+                        </div>
+                        <div class="space-y-1 flex-1 flex flex-col justify-between">
+                            <div>
+                                <span class="text-[9px] font-bold uppercase text-[#3b82f6] bg-[#3b82f6]/5 px-2 py-0.5 rounded border border-[#3b82f6]/10 inline-block">${b.language || 'Hinglish'}</span>
+                                <h3 class="text-xs font-bold text-white line-clamp-2 pt-1 font-poppins">${finalTitleName}</h3>
+                            </div>
+                            <button onclick="loadBatchSubjects('${exactId}', '${finalTitleName.replace(/'/g, "\\'")}')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white font-bold text-[11px] py-2.5 rounded-lg border border-[#2d3748] cursor-pointer transition">
+                                <i class="fa-solid fa-folder-open mr-1.5"></i>Launch Subjects Arena
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (appendMode) gridBatches.insertAdjacentHTML('beforeend', htmlString);
+            else gridBatches.innerHTML = htmlString;
+        }
+
+        async function loadBatchSubjects(batchId, title) {
+            currentActiveBatchId = batchId;
+            elementLoading.classList.remove('hidden');
+            navigateToScreen("internal-subjects");
+            document.getElementById('internalBatchTitle').innerText = title;
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/BatchInfo?BatchId=${batchId}&Type=details`);
+                const json = await res.json();
+                if(json.success && json.data && json.data.subjects) {
+                    gridSubjects.innerHTML = json.data.subjects.map(s => {
+                        let resolvedImg = (s.imageId && s.imageId.baseUrl && s.imageId.key) ? (s.imageId.baseUrl + s.imageId.key) : "https://via.placeholder.com/350x200/111827/ffffff?text=Subject+Track";
+                        return `
+                            <div onclick="loadSubjectChapters('${s.slug}', '${s.subject.replace(/'/g, "\\'")}')" class="pw-card p-3 flex flex-col justify-between cursor-pointer">
+                                <div class="w-full h-32 bg-[#0b111e] rounded-lg overflow-hidden mb-2.5 border border-[#1f293d]/40">
+                                    <img src="${resolvedImg}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/350x200/111827/ffffff?text=Subject+Track'">
+                                </div>
+                                <h4 class="font-bold text-xs text-white truncate px-0.5 font-poppins">${s.subject}</h4>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No structural modules populated inside branch node mapping.</p>`;
+                }
+            } catch(e){} finally { elementLoading.classList.add('hidden'); }
+        }
+
+        async function loadSubjectChapters(slug, title) {
+            currentActiveSubjectSlug = slug;
+            elementLoading.classList.remove('hidden');
+            navigateToScreen("subject-topics");
+            document.getElementById('topicsHeaderTitle').innerText = title;
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/SubjectInfo?BatchId=${currentActiveBatchId}&SubjectId=${slug}&page=1`);
+                const json = await res.json();
+                if(json.data && json.data.length > 0) {
+                    gridFolderTopics.innerHTML = json.data.map(t => {
+                        return `
+                            <div onclick="loadTopicTabs('${t.slug}', '${t.name.replace(/'/g, "\\'")}')" class="bg-[#111827] border border-[#1f293d] hover:border-[#3b82f6]/40 p-4 rounded-xl flex items-center justify-between cursor-pointer transition">
+                                <div class="flex items-center space-x-3 overflow-hidden">
+                                    <i class="fa-solid fa-folder text-amber-500 text-lg shrink-0"></i>
+                                    <span class="font-bold text-xs text-gray-200 truncate font-poppins">${t.name}</span>
+                                </div>
+                                <div class="flex items-center text-[10px] font-bold text-[#3b82f6] bg-[#3b82f6]/5 border border-[#3b82f6]/10 px-2 py-1 rounded">
+                                    <i class="fa-solid fa-layer-group mr-1.5"></i>Open Index
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    gridFolderTopics.innerHTML = `<p class="text-center text-xs text-gray-500 col-span-full py-12">No dynamic topic tracks compiled.</p>`;
+                }
+            } catch(e){} finally { elementLoading.classList.add('hidden'); }
+        }
+
+        async function loadTopicTabs(slug, name) {
+            currentActiveTopicSlug = slug;
+            elementLoading.classList.remove('hidden');
+            navigateToScreen("topic-subtabs");
+            document.getElementById('topicTabsMainTitle').innerText = name;
+            displayTabSlot.innerHTML = '';
+            
+            if(currentActiveContentTypeTab === "DppQuiz") {
+                try {
+                    const res = await fetch(`${LOCAL_SERVER_ROOT}/api/DppQuiz?BatchId=${currentActiveBatchId}&SubjectId=${currentActiveSubjectSlug}&TopicId=${slug}`);
+                    const json = await res.json();
+                    const array = json.data || [];
+                    if(array.length > 0) {
+                        displayTabSlot.innerHTML = array.map(q => `
+                            <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex flex-col justify-between">
+                                <h4 class="text-xs font-bold text-gray-200 font-poppins line-clamp-2">${q.title || 'Interactive Evaluation Module'}</h4>
+                                <button onclick="alert('Interactive quiz arena framework active.')" class="w-full mt-4 bg-[#1f293d] hover:bg-[#3b82f6] text-white py-2.5 rounded-lg text-[11px] font-bold transition cursor-pointer">Launch Dynamic MCQ Arena</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No active dynamic quiz modules published inside index channel.</div>`;
+                    }
+                } catch(e){} finally { elementLoading.classList.add('hidden'); }
+                return;
+            }
+
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/TopicInfo?BatchId=${currentActiveBatchId}&SubjectId=${currentActiveSubjectSlug}&TopicId=${slug}&ContentType=${currentActiveContentTypeTab}&page=1`);
+                const json = await res.json();
+                const array = json.data || [];
+                
+                if(array.length > 0) {
+                    if(currentActiveContentTypeTab === "videos" || currentActiveContentTypeTab === "DppVideos") {
+                        displayTabSlot.innerHTML = array.map(item => {
+                            const cleanTitle = item.topic || 'Untitled Stream Node';
+                            const thumb = item.videoDetails?.image || 'https://via.placeholder.com/350x180/0b111e/ffffff?text=Video+Lecture';
+                            return `
+                                <div class="pw-card p-3 flex flex-col justify-between">
+                                    <div class="w-full h-40 rounded-lg overflow-hidden relative bg-[#0b111e] border border-[#1f293d]/50">
+                                        <img src="${thumb}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/350x180/0b111e/ffffff?text=Video+Lecture'">
+                                    </div>
+                                    <h4 class="text-xs font-bold text-gray-200 mt-2.5 line-clamp-2 leading-relaxed font-poppins">${cleanTitle}</h4>
+                                    <button onclick="executeFinalPlaybackStream('${item._id}', '${cleanTitle.replace(/'/g, "\\'")}')" class="w-full mt-3 bg-[#3b82f6] hover:bg-blue-600 text-white py-2.5 rounded-lg text-xs font-bold cursor-pointer transition">
+                                        <i class="fa-solid fa-circle-play mr-1.5"></i>Stream Dynamic Video
+                                    </button>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        displayTabSlot.innerHTML = array.map(doc => `
+                            <div class="bg-[#111827] border border-[#1f293d] p-4 rounded-xl flex items-center justify-between">
+                                <div class="flex items-center space-x-3 overflow-hidden">
+                                    <i class="fa-solid fa-file-pdf text-red-500 text-xl shrink-0"></i>
+                                    <h4 class="text-xs font-bold text-gray-200 truncate font-poppins">${doc.topic || 'Document Data Sheet'}</h4>
+                                </div>
+                                <button onclick="window.open('${doc.attachmentSheetsDetails?.attachmentUrl || '#'}', '_blank')" class="bg-[#1f293d] hover:bg-[#3b82f6] text-white p-2.5 rounded-lg text-xs transition cursor-pointer shrink-0 ml-2"><i class="fa-solid fa-download"></i></button>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    displayTabSlot.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 text-xs">No compiled assets registered at node index segment.</div>`;
+                }
+            } catch(e){} finally { elementLoading.classList.add('hidden'); }
+        }
+
+        document.querySelectorAll('.subtab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('subtab-active'));
+                this.classList.add('subtab-active');
+                currentActiveContentTypeTab = this.getAttribute('data-type');
+                loadTopicTabs(currentActiveTopicSlug, document.getElementById('topicTabsMainTitle').innerText);
+            });
+        });
+
+        async function executeFinalPlaybackStream(contentId, lectureTitle) {
+            navigateToScreen("theatrical-player");
+            document.getElementById('playerLectureTitleHeader').innerText = lectureTitle;
+            
+            isSlidesDrawerOpen = false;
+            slidesDrawer.style.width = "0px";
+            slidesDrawer.style.borderColor = "transparent";
+
+            const video = document.getElementById('nativeVideoPlayer');
+            shaka.polyfill.installAll();
+
+            if(shakaPlayerInstanceInstance) { 
+                await shakaPlayerInstanceInstance.destroy(); 
+                shakaPlayerInstanceInstance = null; 
+            }
+            shakaPlayerInstanceInstance = new shaka.Player(video);
+
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/video-stream?batchId=${currentActiveBatchId}&subjectId=${currentActiveSubjectSlug}&contentId=${contentId}`);
+                const json = await res.json();
+                
+                if(!json.success || !json.data || !json.data.url) throw new Error("Manifest track generation signature expired.");
+
+                let baseManifestTargetUrl = json.data.url + (json.data.signedUrl || "");
+
+                shakaPlayerInstanceInstance.getNetworkingEngine().registerRequestFilter((type, request) => {
+                    if (type === shaka.net.NetworkingEngine.RequestType.SEGMENT && json.data.signedUrl) {
+                        const targetUri = request.uris[0];
+                        if (!targetUri.includes('URLPrefix=')) {
+                            const separator = targetUri.includes('?') ? '&' : '?';
+                            request.uris[0] = targetUri + separator + json.data.signedUrl.replace(/^\?/, '');
+                        }
+                    }
+                });
+
+                await shakaPlayerInstanceInstance.load(baseManifestTargetUrl);
+                fetchLectureWhiteboardSlidesData(contentId);
+            } catch(error) {
+                alert("Player Link Validation Error: " + error.message);
+            }
+        }
+
+        async function fetchLectureWhiteboardSlidesData(scheduleId) {
+            slidesListContainer.innerHTML = '';
+            try {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/Schedule?BatchId=${currentActiveBatchId}&SubjectId=${currentActiveSubjectSlug}&ContentId=${scheduleId}`);
+                const json = await res.json();
+                if (json.success && json.data && json.data.slides && json.data.slides.length > 0) {
+                    slidesListContainer.innerHTML = json.data.slides.map(slide => {
+                        const absoluteUrl = slide.img.baseUrl + slide.img.key;
+                        const targetTime = parseFloat(slide.timeStamp || 0);
+                        const mins = Math.floor(targetTime / 60);
+                        const secs = Math.floor(targetTime % 60).toString().padStart(2, '0');
+                        return `
+                            <div onclick="document.getElementById('nativeVideoPlayer').currentTime = ${targetTime}" class="bg-[#0b111e] border border-[#1f293d] p-1.5 rounded-lg flex flex-col space-y-1.5 cursor-pointer hover:border-[#3b82f6] transition shadow-inner">
+                                <div class="w-full h-24 rounded overflow-hidden relative bg-black">
+                                    <img src="${absoluteUrl}" class="w-full h-full object-contain" onerror="this.src='https://via.placeholder.com/200x120?text=Slide'">
+                                    <span class="absolute top-1 left-1 bg-black/80 text-[8px] font-bold text-[#3b82f6] px-1.5 py-0.5 rounded border border-[#3b82f6]/10">${mins}:${secs}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No snapshots indexed.</p>`;
+                }
+            } catch(e){}
+        }
+
+        document.getElementById('closePlayerBtn').addEventListener('click', async () => {
+            if (shakaPlayerInstanceInstance) { 
+                await shakaPlayerInstanceInstance.destroy(); 
+                shakaPlayerInstanceInstance = null; 
+            }
+            const video = document.getElementById('nativeVideoPlayer');
+            video.src = "";
+            video.load();
+            navigateToScreen("topic-subtabs");
+        });
+
+        document.addEventListener('DOMContentLoaded', () => { loadMainBatchesData(false); });
+    </script>
+</body>
+</html>
