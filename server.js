@@ -9,11 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const TARGET_ROOT = "https://pwthor.live";
 
-// Docker Persistent Volume Session Data Directory
-const SESSION_DATA_DIR = path.join(__dirname, 'range_session_vault');
-if (!fs.existsSync(SESSION_DATA_DIR)) {
-    fs.mkdirSync(SESSION_DATA_DIR, { recursive: true });
-}
+// File where injected vault token string gets written
+const TOKEN_FILE_PATH = path.join(__dirname, 'range_vault_token.txt');
 
 app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
@@ -28,16 +25,12 @@ const savedUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/53
 let globalBrowser = null;
 let globalPage = null;
 
-// CLEAN MATRIX CONFIG: Removed all private hardcoded data tags entirely
-const backupSessionCookies = [];
-
 async function getSafeActivePage() {
     if (!globalBrowser || !globalBrowser.isConnected()) {
-        console.log("[RangeXCoder Engine] Spawning persistent Docker-compatible browser context...");
+        console.log("[RangeXCoder Engine] Spawning optimized anti-bot browser space...");
         globalBrowser = await puppeteer.launch({
             headless: true,
             executablePath: puppeteer.executablePath(),
-            userDataDir: SESSION_DATA_DIR, // Session keeps permanently saved here
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
@@ -66,72 +59,43 @@ async function getSafeActivePage() {
             window.chrome = { runtime: {} };
         });
 
-        // Bridge initial routing context
         await globalPage.goto(TARGET_ROOT, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
     }
+
+    // Dynamic Cookie Refresh Guard: Check if token.txt has text and reload cookies
+    if (fs.existsSync(TOKEN_FILE_PATH)) {
+        const activeTokenString = fs.readFileSync(TOKEN_FILE_PATH, 'utf8').trim();
+        if (activeTokenString.length > 10) {
+            await globalPage.setCookie({
+                name: 'auth_token',
+                value: activeTokenString,
+                domain: '.pwthor.live',
+                path: '/',
+                httpOnly: true,
+                secure: true,
+                sameSite: 'None'
+            });
+        }
+    }
+    
     return globalPage;
 }
 
-// 🌐 FIXED DYNAMIC NATIVE TUNNEL ROUTERS (Direct Native APIs Trigger)
-app.post('/auth/send-otp', async (req, res) => {
-    const { mobile } = req.body;
-    if(!mobile) return res.status(400).json({ success: false, error: "Mobile node tags missing parameters." });
+// 🌐 NEW ADMIN INJECTION VAULT ENDPOINT
+app.post('/api/admin/set-token', (req, res) => {
+    const { token } = req.body;
+    if(!token) return res.status(400).json({ success: false, error: "Token payload is empty." });
     
     try {
-        const page = await getSafeActivePage();
-        console.log(`[RangeXCoder Visual Tunnel] Forwarding dynamic request payload straight to native auth/login endpoint...`);
-        
-        // Execute real login payload dispatch INSIDE the cleared anti-bot browser window
-        const result = await page.evaluate(async (targetMobile) => {
-            const response = await fetch('https://pwthor.live/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ mobile: targetMobile })
-            });
-            return response.json();
-        }, mobile);
-
-        console.log("[RangeXCoder Tunnel] Send OTP Response:", result);
-        res.json(result);
+        fs.writeFileSync(TOKEN_FILE_PATH, token.trim(), 'utf8');
+        console.log("[RangeXCoder Vault] New raw auth_token saved to system files successfully!");
+        res.json({ success: true, message: "Token saved into persistent storage file." });
     } catch(e) {
-        console.error("[Tunnel Send OTP Exception]", e.message);
-        res.status(500).json({ success: false, error: e.message });
+        res.status(500).json({ success: false, error: "Disk Write Error: " + e.message });
     }
 });
 
-app.post('/auth/verify-otp', async (req, res) => {
-    const { mobile, otp } = req.body;
-    if(!otp || !mobile) return res.status(400).json({ success: false, error: "Verification payload parameter nodes empty." });
-    
-    try {
-        const page = await getSafeActivePage();
-        console.log(`[RangeXCoder Visual Tunnel] Sending verify-otp payload directly inside chrome isolated network stream...`);
-        
-        const result = await page.evaluate(async (targetMobile, targetOtp) => {
-            const response = await fetch('https://pwthor.live/api/auth/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ mobile: targetMobile, otp: targetOtp })
-            });
-            return response.json();
-        }, mobile, otp);
-
-        console.log("[RangeXCoder Tunnel] Verify OTP Response:", result);
-        
-        if (result.success) {
-            console.log("[RangeXCoder Tunnel] Authentication confirmed. Navigating to finalize token encryption context...");
-            // Force browser to home catalog page context to securely stamp cookies into storage volume disk
-            await page.goto(`${TARGET_ROOT}/study/batches`, { waitUntil: 'domcontentloaded', timeout: 25000 }).catch(() => {});
-        }
-
-        res.json(result);
-    } catch(e) {
-        console.error("[Tunnel Verify OTP Exception]", e.message);
-        res.status(500).json({ success: false, error: e.message });
-    }
-});
-
-// Highly responsive automation click handler to wipe out Apple Selection Overlay Modal
+// Highly responsive automation click handler to wipe out Apple Selection Modal (Untouched)
 async function autoBypassApplePopup(page) {
     try {
         await page.evaluate(() => {
@@ -148,7 +112,7 @@ async function autoBypassApplePopup(page) {
     } catch (e) {}
 }
 
-// Video streaming crawler handler
+// Video streaming crawler handler (Untouched)
 app.get('/video-stream', async (req, res) => {
     const { batchId, subjectId, contentId } = req.query;
     if (!batchId || !contentId) return res.status(400).json({ success: false, error: "Missing identity tags." });
@@ -160,7 +124,6 @@ app.get('/video-stream', async (req, res) => {
         const targetPage = await globalBrowser.newPage();
         await targetPage.setUserAgent(savedUserAgent);
         
-        // Match real current dynamic sessions cookie records
         const rootCookies = await page.cookies();
         await targetPage.setCookie(...rootCookies);
 
@@ -194,44 +157,34 @@ app.get('/video-stream', async (req, res) => {
     }
 });
 
-// Secure Cloudflare Tunneling Endpoint Matrix Router Mirroring Exact Targets Natively
+// ULTIMATE CLOUDFLARE BYPASS: Direct physical page visit navigation loop to scrape JSON perfectly
 app.all('/api/*', async (req, res) => {
     const targetUrl = `${TARGET_ROOT}${req.url}`;
     try {
         const page = await getSafeActivePage();
-        const result = await page.evaluate(async (url, method, bodyString) => {
-            try {
-                const fetchOptions = { 
-                    method: method, 
-                    credentials: "include",
-                    headers: {
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    }
-                };
-                if (method !== "GET" && bodyString) {
-                    fetchOptions.body = bodyString;
-                }
-                const response = await fetch(url, fetchOptions);
-                const contentType = response.headers.get("content-type") || "";
-                if (contentType.includes("application/json")) {
-                    return { status: response.status, isJson: true, data: await response.json() };
-                } else {
-                    return { status: response.status, isJson: false, data: await response.text() };
-                }
-            } catch (err) {
-                return { status: 500, isJson: true, data: { success: false, error: err.message } };
+        
+        console.log(`[RangeXCoder Resilient Navigation] Visiting API directly: ${targetUrl}`);
+        
+        // Physically go to the URL so Cloudflare treats it as an absolute genuine page view
+        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 35000 });
+        
+        // Grab the raw JSON displayed inside the body container tags
+        const outputJsonText = await page.evaluate(() => document.body.innerText);
+        
+        try {
+            const parsedData = JSON.parse(outputJsonText);
+            res.json(parsedData);
+        } catch(jsonErr) {
+            // If response is not JSON, it means Cloudflare threw an unexpected HTML block
+            if (outputJsonText.includes("blocked") || outputJsonText.includes("Attention Required")) {
+                res.status(403).send(outputJsonText);
+            } else {
+                res.status(500).json({ success: false, error: "Output compilation format mismatch.", raw: outputJsonText });
             }
-        }, targetUrl, req.method, req.method !== "GET" ? JSON.stringify(req.body) : null);
-
-        if (result.isJson) res.status(result.status).json(result.data);
-        else res.status(result.status).send(result.data);
+        }
     } catch (e) {
-        res.status(500).json({ success: false, error: "Cloudflare tunnel bridge failure: " + e.message });
+        res.status(500).json({ success: false, error: "Cloudflare navigation tunnel failed: " + e.message });
     }
 });
 
-// Cold-start lazy trigger instantiation loop
-(async () => { try { await getSafeActivePage(); isEngineReady = true; } catch(e){} })();
-
-app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Tunnel Active on port: ${PORT}`));
+app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Token Tunnel Active on port: ${PORT}`));
