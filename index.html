@@ -201,7 +201,7 @@
 
         async function triggerTunnelSendOtp() {
             const mobile = document.getElementById('inputUserMobile').value;
-            if(!mobile || mobile.trim().length < 10) return alert("Please input a valid 10-digit system network parameter.");
+            if(!mobile || mobile.trim().length < 10) return alert("Please input a valid 10-digit number.");
             updateStatusLabel("Evaluating and dispatching dynamic OTP route connection...");
             
             try {
@@ -275,7 +275,6 @@
             if (!appendMode) { gridBatches.innerHTML = ''; currentBatchesPage = 1; }
             elementLoading.classList.remove('hidden');
             
-            // PRIORITY OPTIMIZATION: Try fetching enrolled profile batches from AboutMe first
             try {
                 const profileResponse = await fetch(`${LOCAL_SERVER_ROOT}/api/AboutMe`);
                 const profileJson = await profileResponse.json();
@@ -289,7 +288,6 @@
                 console.log("[Ecosystem Notice] Public stream active or session unauthenticated.");
             }
 
-            // Fallback: If not logged in, trigger public AllBatches endpoint logs
             let targetApiUrl = `${LOCAL_SERVER_ROOT}/api/AllBatches?page=${currentBatchesPage}`;
             if(activeSearchQueryString.trim() !== "") {
                 targetApiUrl = `${LOCAL_SERVER_ROOT}/api/searchBatch?name=${encodeURIComponent(activeSearchQueryString)}&page=${currentBatchesPage}`;
@@ -308,7 +306,7 @@
                 }
             } catch(e) {
                 console.error(e);
-            } military { elementLoading.classList.add('hidden'); }
+            } finally { elementLoading.classList.add('hidden'); } // FIXED: Changed military to finally
         }
 
         btnLoadMoreBatches.addEventListener('click', () => {
@@ -373,7 +371,7 @@
                         `;
                     }).join('');
                 } else {
-                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No structural modules populated inside branch node mapping.</p>`;
+                    gridSubjects.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No modules found inside directory mapping.</p>`;
                 }
             } catch(e){} finally { elementLoading.classList.add('hidden'); }
         }
@@ -543,10 +541,24 @@
                         `;
                     }).join('');
                 } else {
-                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No snapshots indexed.</p>`;
+                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No whiteboard snapshots index.</p>`;
                 }
             } catch(e){}
         }
+
+        toggleSlidesViewBtn.addEventListener('click', () => {
+            if (!isSlidesDrawerOpen) {
+                slidesDrawer.style.width = "260px";
+                slidesDrawer.style.borderColor = "#1f293d";
+                toggleSlidesViewBtn.className = "bg-[#3b82f6] text-white px-3 py-1.5 rounded-md text-xs font-bold transition cursor-pointer";
+                isSlidesDrawerOpen = true;
+            } else {
+                slidesDrawer.style.width = "0px";
+                slidesDrawer.style.borderColor = "transparent";
+                toggleSlidesViewBtn.className = "bg-[#1f293d] border border-[#2d3748] text-[#3b82f6] px-3 py-1.5 rounded-md text-xs font-bold hover:bg-[#2d3748] transition cursor-pointer";
+                isSlidesDrawerOpen = false;
+            }
+        });
 
         document.getElementById('closePlayerBtn').addEventListener('click', async () => {
             if (shakaPlayerInstanceInstance) { 
