@@ -4,7 +4,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
-// PREMIUM STEALTH ENGINE MASK INTEGRATION
+// INTEGRATED PREMIUM STEALTH ENGINE SETUP
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
@@ -19,7 +19,9 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname)));
 
-app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 const savedUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 let globalBrowser = null;
@@ -27,7 +29,7 @@ let globalPage = null;
 
 async function getSafeActivePage() {
     if (!globalBrowser || !globalBrowser.isConnected()) {
-        console.log("[RangeXCoder Engine] Spawning premium anti-bot stealth browser space...");
+        console.log("[RangeXCoder Engine] Spawning premium anti-bot stealth browser instance...");
         globalBrowser = await puppeteer.launch({
             headless: true,
             executablePath: puppeteer.executablePath(),
@@ -52,13 +54,7 @@ async function getSafeActivePage() {
         
         await globalPage.setUserAgent(savedUserAgent);
         await globalPage.setViewport({ width: 1920, height: 1080 });
-
-        await globalPage.evaluateOnNewDocument(() => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-            window.chrome = { runtime: {} };
-        });
-
+        
         await globalPage.goto(TARGET_ROOT, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
     }
 
@@ -77,15 +73,16 @@ async function getSafeActivePage() {
             });
         }
     }
+    
     return globalPage;
 }
 
-// 🌐 LIVE CAPTCHA WIREFRAME INTERACTION ENDPOINTS
+// 🌐 LIVE CAPTCHA HUB VIEWPORT STREAM PORTS
 app.get('/api/admin/screenshot', async (req, res) => {
     try {
         const page = await getSafeActivePage();
-        // Take a lightweight optimized snapshot image of the current server page content
-        const buf = await page.screenshot({ type: 'jpeg', quality: 65 });
+        // Capture direct rendering image state of whatever page or challenge tab is currently holding
+        const buf = await page.screenshot({ type: 'jpeg', quality: 75 });
         res.type('image/jpeg');
         res.send(buf);
     } catch(e) { res.status(500).send(e.message); }
@@ -95,7 +92,7 @@ app.post('/api/admin/click', async (req, res) => {
     const { x, y } = req.body;
     try {
         const page = await getSafeActivePage();
-        console.log(`[RangeXCoder Click Tunnel] Clicking on absolute cloud matrix nodes: X=${x}, Y=${y}`);
+        console.log(`[RangeXCoder Tunnel Click] Direct hardware coordinate click: X=${x}, Y=${y}`);
         await page.mouse.click(parseInt(x), parseInt(y));
         res.json({ success: true });
     } catch(e) { res.status(500).json({ success: false, error: e.message }); }
@@ -103,8 +100,7 @@ app.post('/api/admin/click', async (req, res) => {
 
 app.get('/api/admin/goto-home', async (req, res) => {
     try {
-        const page = await getSafeActivePage();
-        await page.goto(`${TARGET_ROOT}/study/batches`, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
+        // FIXED: Do not force page context navigation elsewhere, preserve captcha clearance state context
         res.json({ success: true });
     } catch(e) { res.status(500).json({ success: false }); }
 });
@@ -174,42 +170,50 @@ app.get('/video-stream', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// CLOUDFLARE SECURITY TUNNEL WITH AUTOMATIC CAPTCHA CHANNELS INTERCEPTION
+// REVOLUTIONARY SECURE TUNNEL: Navigates the top-level tab context to avoid hidden fetch traps entirely
 app.all('/api/*', async (req, res) => {
     const targetUrl = `${TARGET_ROOT}${req.url}`;
     try {
         const page = await getSafeActivePage();
-        const result = await page.evaluate(async (url, method, bodyString) => {
+        
+        if (req.method === "GET") {
+            console.log(`[RangeXCoder Top Navigation] Moving main browser tab container to: ${targetUrl}`);
+            
+            // Physically drive browser viewport onto the destination endpoint
+            await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
+            
+            const pageTitle = await page.title();
+            const bodyText = await page.evaluate(() => document.body.innerText);
+            
+            // Intercept if Cloudflare challenge text captures top level context layout frame
+            if (pageTitle.includes("Cloudflare") || pageTitle.includes("Attention Required") || bodyText.includes("cf-wrapper") || bodyText.includes("blocked")) {
+                console.log("[RangeXCoder Interceptor] Captcha Challenge page verified on tab frame interface.");
+                return res.json({ isCloudflare: true, error: "Bypass required" });
+            }
+            
+            // If clean JSON response returns, output it natively to client pipeline
             try {
-                const fetchOptions = { 
-                    method: method, 
-                    credentials: "include",
-                    headers: { "Accept": "application/json", "Content-Type": "application/json" }
-                };
-                if (method !== "GET" && bodyString) fetchOptions.body = bodyString;
-                
-                const response = await fetch(url, fetchOptions);
-                const contentType = response.headers.get("content-type") || "";
-                
-                // Intercept if cloudflare protection code captures the layer
-                if (response.status === 403 || contentType.includes("text/html")) {
-                    const textContent = await response.text();
-                    if(textContent.includes("blocked") || textContent.includes("cf-wrapper") || textContent.includes("Attention Required")) {
-                        return { status: 403, isCloudflare: true, isJson: true, data: { isCloudflare: true, error: "Bypass required" } };
-                    }
-                }
-                
-                if (contentType.includes("application/json")) {
-                    return { status: response.status, isJson: true, data: await response.json() };
-                } else {
-                    return { status: response.status, isJson: false, data: await response.text() };
-                }
-            } catch (err) { return { status: 500, isJson: true, data: { success: false, error: err.message } }; }
-        }, targetUrl, req.method, req.method !== "GET" ? JSON.stringify(req.body) : null);
-
-        if (result.isJson) res.status(result.status).json(result.data);
-        else res.status(result.status).send(result.data);
+                const parsedJson = JSON.parse(bodyText);
+                return res.json(parsedJson);
+            } catch(jsonErr) {
+                return res.send(bodyText);
+            }
+        } else {
+            // Post methods domestic fallback context evaluations
+            const result = await page.evaluate(async (url, method, bodyString) => {
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                        body: bodyString
+                    });
+                    return { status: response.status, data: await response.json() };
+                } catch (err) { return { status: 500, data: { success: false, error: err.message } }; }
+            }, targetUrl, req.method, JSON.stringify(req.body));
+            
+            return res.status(result.status).json(result.data);
+        }
     } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Tunnel Active on port: ${PORT}`));
+app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Stealth Tunnel Active on port: ${PORT}`));
