@@ -51,8 +51,8 @@
             </div>
         </div>
         <div class="flex items-center space-x-3">
-            <button onclick="toggleLoginModal(true)" class="bg-gradient-to-r from-amber-600 to-amber-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow hover:opacity-90 transition cursor-pointer flex items-center">
-                <i class="fa-solid fa-key mr-2"></i> OTP Authentication Tunnel
+            <button onclick="toggleTokenModal(true)" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow hover:opacity-90 transition cursor-pointer flex items-center">
+                <i class="fa-solid fa-shield-halved mr-2"></i> Admin Token Console
             </button>
         </div>
     </header>
@@ -137,32 +137,23 @@
 
     </main>
 
-    <div id="authTunnelModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div id="tokenVaultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
         <div class="bg-[#111827] border border-[#1f293d] p-6 rounded-2xl max-w-md w-full space-y-5 shadow-2xl">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
-                    <div class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></div>
-                    <h3 class="font-bold text-white text-sm font-poppins">Authentication Core Link Tunnel</h3>
+                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                    <h3 class="font-bold text-white text-sm font-poppins">Admin Token Injection Box</h3>
                 </div>
-                <button onclick="toggleLoginModal(false)" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="toggleTokenModal(false)" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
+            <p class="text-xs text-gray-400 leading-relaxed">Bhai, real website par normal login karke apni cookie se <code class="text-blue-400 font-mono">auth_token</code> ki text value copy karo aur niche paste kar do.</p>
             
-            <div id="phoneNodeArea" class="space-y-3">
-                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 1: Enter Phone Number</label>
-                <div class="flex space-x-2">
-                    <input type="text" id="inputUserMobile" placeholder="Enter 10 digit number..." class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
-                    <button onclick="triggerTunnelSendOtp()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 rounded-lg transition shrink-0 cursor-pointer">Get OTP</button>
-                </div>
+            <div class="space-y-3">
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Paste Auth Token String</label>
+                <textarea id="inputRawAuthToken" rows="4" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX..." class="w-full bg-[#0b111e] border border-[#1f293d] rounded-lg p-3 text-xs focus:outline-none focus:border-blue-500 text-white font-mono"></textarea>
+                <button onclick="submitTokenToVault()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-lg transition cursor-pointer">Inject Token permanently</button>
             </div>
-
-            <div id="otpNodeArea" class="space-y-3 hidden">
-                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Step 2: Enter OTP Verification Key</label>
-                <div class="flex space-x-2">
-                    <input type="text" id="inputUserOtp" placeholder="Enter OTP code..." class="flex-1 bg-[#0b111e] border border-[#1f293d] rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-medium">
-                    <button onclick="triggerTunnelVerifyOtp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 rounded-lg transition shrink-0 cursor-pointer">Verify & Core Link</button>
-                </div>
-            </div>
-            <p id="authTerminalStatusMessage" class="text-[10px] text-amber-500 font-bold font-mono text-center bg-amber-500/5 py-2 rounded hidden border border-amber-500/10"></p>
+            <p id="vaultStatusMessage" class="text-[10px] text-blue-400 font-bold font-mono text-center bg-blue-500/5 py-2 rounded hidden border border-blue-500/10"></p>
         </div>
     </div>
 
@@ -194,60 +185,33 @@
         const batchSearchBar = document.getElementById('batchSearchBar');
         const btnLoadMoreBatches = document.getElementById('btnLoadMoreBatches');
 
-        function toggleLoginModal(show) {
-            document.getElementById('authTunnelModal').classList.toggle('hidden', !show);
-            document.getElementById('authTerminalStatusMessage').classList.add('hidden');
+        function toggleTokenModal(show) {
+            document.getElementById('tokenVaultModal').classList.toggle('hidden', !show);
+            document.getElementById('vaultStatusMessage').classList.add('hidden');
         }
 
-        async function triggerTunnelSendOtp() {
-            const mobile = document.getElementById('inputUserMobile').value;
-            if(!mobile || mobile.trim().length < 10) return alert("Please input a valid 10-digit number.");
-            updateStatusLabel("Evaluating and dispatching dynamic OTP route connection...");
+        async function submitTokenToVault() {
+            const tokenValue = document.getElementById('inputRawAuthToken').value;
+            if(!tokenValue || tokenValue.trim() === "") return alert("Bhai token ki value toh dalo!");
             
+            const statusEl = document.getElementById('vaultStatusMessage');
+            statusEl.innerText = "Injecting token into secure backend storage...";
+            statusEl.classList.remove('hidden');
+
             try {
-                // FIXED: Hitting real endpoint path via proxy stream tunnel directly
-                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/auth/login`, {
+                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/admin/set-token`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ mobile })
+                    body: JSON.stringify({ token: tokenValue.trim() })
                 });
                 const data = await res.json();
                 if(data.success) {
-                    document.getElementById('otpNodeArea').classList.remove('hidden');
-                    updateStatusLabel("OTP token sent successfully! Verify registration code key below.");
+                    statusEl.innerText = "Token injected successfully! Synchronizing system map...";
+                    setTimeout(() => { toggleTokenModal(false); loadMainBatchesData(false); }, 1500);
                 } else {
-                    updateStatusLabel("Error response: " + (data.message || "Failed execution loop"));
+                    statusEl.innerText = "Injection failed: " + data.error;
                 }
-            } catch(e) { updateStatusLabel("Visual tunnel communication pipeline dropped."); }
-        }
-
-        async function triggerTunnelVerifyOtp() {
-            const mobile = document.getElementById('inputUserMobile').value;
-            const otp = document.getElementById('inputUserOtp').value;
-            if(!otp) return alert("Please supply active OTP validation code.");
-            updateStatusLabel("Submitting cryptographic token credentials to core terminal map...");
-            
-            try {
-                // FIXED: Hitting real verify endpoint path via proxy stream tunnel directly
-                const res = await fetch(`${LOCAL_SERVER_ROOT}/api/auth/verify-otp`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ mobile, otp })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    updateStatusLabel("Ecosystem link successful! Hydrating custom user profile data grid...");
-                    setTimeout(() => { toggleLoginModal(false); loadMainBatchesData(false); }, 1500);
-                } else {
-                    updateStatusLabel("Validation failed: " + (data.message || "Invalid OTP code key"));
-                }
-            } catch(e) { updateStatusLabel("Bridge connection execution loop interrupted."); }
-        }
-
-        function updateStatusLabel(msg) {
-            const el = document.getElementById('authTerminalStatusMessage');
-            el.innerText = msg;
-            el.classList.remove('hidden');
+            } catch(e) { statusEl.innerText = "Network bridge disconnect."; }
         }
 
         function navigateToScreen(screenId, saveHistory = true) {
@@ -277,7 +241,6 @@
             if (!appendMode) { gridBatches.innerHTML = ''; currentBatchesPage = 1; }
             elementLoading.classList.remove('hidden');
             
-            // FIXED: Fetch personal purchased batches layout via AboutMe endpoint first
             try {
                 const profileResponse = await fetch(`${LOCAL_SERVER_ROOT}/api/AboutMe`);
                 const profileJson = await profileResponse.json();
@@ -288,7 +251,7 @@
                     return;
                 }
             } catch(profileErr) {
-                console.log("[Ecosystem Notice] Public stream active or session unauthenticated.");
+                console.log("[Notice] Session unauthenticated or standard public catalog active.");
             }
 
             let targetApiUrl = `${LOCAL_SERVER_ROOT}/api/AllBatches?page=${currentBatchesPage}`;
@@ -304,7 +267,7 @@
                     if(json.data.length < 9) btnLoadMoreBatches.classList.add('hidden');
                     else btnLoadMoreBatches.classList.remove('hidden');
                 } else {
-                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online records synced. Please launch the OTP terminal connection link above.</p>`;
+                    if (!appendMode) gridBatches.innerHTML = `<p class="col-span-full text-center text-xs text-gray-500 py-12">No online records found. Please update token from top panel console.</p>`;
                     btnLoadMoreBatches.classList.add('hidden');
                 }
             } catch(e) {
@@ -501,7 +464,6 @@
             try {
                 const res = await fetch(`${LOCAL_SERVER_ROOT}/video-stream?batchId=${currentActiveBatchId}&subjectId=${currentActiveSubjectSlug}&contentId=${contentId}`);
                 const json = await res.json();
-                
                 if(!json.success || !json.data || !json.data.url) throw new Error("Manifest track generation signature expired.");
 
                 let baseManifestTargetUrl = json.data.url + (json.data.signedUrl || "");
@@ -544,7 +506,7 @@
                         `;
                     }).join('');
                 } else {
-                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No whiteboard snapshots index.</p>`;
+                    slidesListContainer.innerHTML = `<p class="text-[10px] text-gray-500 text-center py-6">No whiteboard snapshots indexed.</p>`;
                 }
             } catch(e){}
         }
