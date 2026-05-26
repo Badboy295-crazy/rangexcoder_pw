@@ -17,6 +17,15 @@ const TOKEN_FILE_PATH = path.join(__dirname, 'range_vault_token.txt');
 app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
+
+// FORCE CACHE DESTRUCTION MIDDLEWARE (Wipes out 304 status code traps entirely)
+app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+});
+
 app.use(express.static(path.join(__dirname)));
 
 app.get('/', (req, res) => {
@@ -55,7 +64,9 @@ async function getSafeActivePage() {
         await globalPage.setUserAgent(savedUserAgent);
         await globalPage.setViewport({ width: 1920, height: 1080 });
         
-        await globalPage.goto(TARGET_ROOT, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
+        // CRITICAL FIX: Always stay on a real human-facing interface structure layout
+        console.log("[RangeXCoder Engine] Priming browser contextual origin on home node path...");
+        await globalPage.goto(`${TARGET_ROOT}/study/batches`, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
     }
 
     // Dynamic Token Vault Validator Injection
@@ -81,8 +92,8 @@ async function getSafeActivePage() {
 app.get('/api/admin/screenshot', async (req, res) => {
     try {
         const page = await getSafeActivePage();
-        // Capture direct rendering image state of whatever page or challenge tab is currently holding
-        const buf = await page.screenshot({ type: 'jpeg', quality: 75 });
+        // Capture direct rendering image state of the actual challenge interface
+        const buf = await page.screenshot({ type: 'jpeg', quality: 80 });
         res.type('image/jpeg');
         res.send(buf);
     } catch(e) { res.status(500).send(e.message); }
@@ -100,7 +111,9 @@ app.post('/api/admin/click', async (req, res) => {
 
 app.get('/api/admin/goto-home', async (req, res) => {
     try {
-        // FIXED: Do not force page context navigation elsewhere, preserve captcha clearance state context
+        const page = await getSafeActivePage();
+        // Reset page back to secure home index to refresh tokens layout mapping
+        await page.goto(`${TARGET_ROOT}/study/batches`, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {});
         res.json({ success: true });
     } catch(e) { res.status(500).json({ success: false }); }
 });
@@ -170,50 +183,51 @@ app.get('/video-stream', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-// REVOLUTIONARY SECURE TUNNEL: Navigates the top-level tab context to avoid hidden fetch traps entirely
+// ULTIMATE FIX: Evaluates the query natively INSIDE the active home tab space to bypass fetch blocks entirely
 app.all('/api/*', async (req, res) => {
     const targetUrl = `${TARGET_ROOT}${req.url}`;
     try {
         const page = await getSafeActivePage();
         
-        if (req.method === "GET") {
-            console.log(`[RangeXCoder Top Navigation] Moving main browser tab container to: ${targetUrl}`);
-            
-            // Physically drive browser viewport onto the destination endpoint
-            await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
-            
-            const pageTitle = await page.title();
-            const bodyText = await page.evaluate(() => document.body.innerText);
-            
-            // Intercept if Cloudflare challenge text captures top level context layout frame
-            if (pageTitle.includes("Cloudflare") || pageTitle.includes("Attention Required") || bodyText.includes("cf-wrapper") || bodyText.includes("blocked")) {
-                console.log("[RangeXCoder Interceptor] Captcha Challenge page verified on tab frame interface.");
-                return res.json({ isCloudflare: true, error: "Bypass required" });
-            }
-            
-            // If clean JSON response returns, output it natively to client pipeline
-            try {
-                const parsedJson = JSON.parse(bodyText);
-                return res.json(parsedJson);
-            } catch(jsonErr) {
-                return res.send(bodyText);
-            }
-        } else {
-            // Post methods domestic fallback context evaluations
-            const result = await page.evaluate(async (url, method, bodyString) => {
-                try {
-                    const response = await fetch(url, {
-                        method: method,
-                        headers: { "Accept": "application/json", "Content-Type": "application/json" },
-                        body: bodyString
-                    });
-                    return { status: response.status, data: await response.json() };
-                } catch (err) { return { status: 500, data: { success: false, error: err.message } }; }
-            }, targetUrl, req.method, JSON.stringify(req.body));
-            
-            return res.status(result.status).json(result.data);
+        // Safety Pre-Flight: Check if the main tab structure itself is currently blocked by Cloudflare
+        const pageTitle = await page.title();
+        const bodyContentString = await page.evaluate(() => document.body ? document.body.innerText : "");
+        
+        if (pageTitle.includes("Cloudflare") || pageTitle.includes("Attention Required") || bodyContentString.includes("cf-wrapper") || bodyContentString.includes("blocked")) {
+            console.log("[RangeXCoder Interceptor] Captcha Challenge detected on top level main tab interface node.");
+            return res.json({ isCloudflare: true, error: "Bypass required" });
         }
+
+        console.log(`[RangeXCoder Tunnel Evaluator] Running fetch payload context inside origin tab for: ${targetUrl}`);
+        
+        // Execute dynamic native query request INSIDE the verified whitelisted stealth tab session
+        const result = await page.evaluate(async (url, method, bodyString) => {
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                    body: bodyString
+                });
+                
+                const contentType = response.headers.get("content-type") || "";
+                if (contentType.includes("application/json")) {
+                    return { status: response.status, isJson: true, data: await response.json() };
+                } else {
+                    return { status: response.status, isJson: false, data: await response.text() };
+                }
+            } catch (err) { return { status: 500, isJson: true, data: { success: false, error: err.message } }; }
+        }, targetUrl, req.method, req.method !== "GET" ? JSON.stringify(req.body) : null);
+
+        // Security Validation Fallback Verification Layer
+        if (result.status === 403 || (typeof result.data === 'string' && (result.data.includes("cf-wrapper") || result.data.includes("blocked")))) {
+            // If the query fails inside, it means the main page needs a quick reload/screenshot challenge sync
+            await page.goto(`${TARGET_ROOT}/study/batches`, { waitUntil: 'domcontentloaded', timeout: 20000 }).catch(() => {});
+            return res.json({ isCloudflare: true, error: "Bypass required" });
+        }
+
+        if (result.isJson) res.status(result.status).json(result.data);
+        else res.status(result.status).send(result.data);
     } catch (e) { res.status(500).json({ success: false, error: e.message }); }
 });
 
-app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Stealth Tunnel Active on port: ${PORT}`));
+app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Tunnel Active on port: ${PORT}`));
