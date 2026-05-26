@@ -1,15 +1,17 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
+// INTEGRATED PREMIUM STEALTH ENGINE SETUP
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const TARGET_ROOT = "https://pwthor.live";
-
-// File where injected vault token string gets written
 const TOKEN_FILE_PATH = path.join(__dirname, 'range_vault_token.txt');
 
 app.use(cors({ origin: "*", credentials: true }));
@@ -27,7 +29,7 @@ let globalPage = null;
 
 async function getSafeActivePage() {
     if (!globalBrowser || !globalBrowser.isConnected()) {
-        console.log("[RangeXCoder Engine] Spawning optimized anti-bot browser space...");
+        console.log("[RangeXCoder Engine] Spawning premium anti-bot stealth browser instance...");
         globalBrowser = await puppeteer.launch({
             headless: true,
             executablePath: puppeteer.executablePath(),
@@ -52,17 +54,12 @@ async function getSafeActivePage() {
         
         await globalPage.setUserAgent(savedUserAgent);
         await globalPage.setViewport({ width: 1920, height: 1080 });
-
-        await globalPage.evaluateOnNewDocument(() => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-            window.chrome = { runtime: {} };
-        });
-
+        
+        // Initial clean redirect setup to set secure domain foundation origin context
         await globalPage.goto(TARGET_ROOT, { waitUntil: 'domcontentloaded', timeout: 35000 }).catch(() => {});
     }
 
-    // Dynamic Cookie Refresh Guard: Check if token.txt has text and reload cookies
+    // Dynamic Cookie Injection: Apply saved range token text straight into active session
     if (fs.existsSync(TOKEN_FILE_PATH)) {
         const activeTokenString = fs.readFileSync(TOKEN_FILE_PATH, 'utf8').trim();
         if (activeTokenString.length > 10) {
@@ -81,15 +78,14 @@ async function getSafeActivePage() {
     return globalPage;
 }
 
-// 🌐 NEW ADMIN INJECTION VAULT ENDPOINT
 app.post('/api/admin/set-token', (req, res) => {
     const { token } = req.body;
-    if(!token) return res.status(400).json({ success: false, error: "Token payload is empty." });
+    if(!token) return res.status(400).json({ success: false, error: "Token string parameter empty." });
     
     try {
         fs.writeFileSync(TOKEN_FILE_PATH, token.trim(), 'utf8');
-        console.log("[RangeXCoder Vault] New raw auth_token saved to system files successfully!");
-        res.json({ success: true, message: "Token saved into persistent storage file." });
+        console.log("[RangeXCoder Vault] Token injected successfully!");
+        res.json({ success: true, message: "Token saved into persistent filesystem storage." });
     } catch(e) {
         res.status(500).json({ success: false, error: "Disk Write Error: " + e.message });
     }
@@ -157,34 +153,44 @@ app.get('/video-stream', async (req, res) => {
     }
 });
 
-// ULTIMATE CLOUDFLARE BYPASS: Direct physical page visit navigation loop to scrape JSON perfectly
+// BULLETPROOF FIXED PROXY ROUTE: Executes domestic safe fetch INSIDE a fully verified stealth page context
 app.all('/api/*', async (req, res) => {
     const targetUrl = `${TARGET_ROOT}${req.url}`;
     try {
         const page = await getSafeActivePage();
         
-        console.log(`[RangeXCoder Resilient Navigation] Visiting API directly: ${targetUrl}`);
-        
-        // Physically go to the URL so Cloudflare treats it as an absolute genuine page view
-        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 35000 });
-        
-        // Grab the raw JSON displayed inside the body container tags
-        const outputJsonText = await page.evaluate(() => document.body.innerText);
-        
-        try {
-            const parsedData = JSON.parse(outputJsonText);
-            res.json(parsedData);
-        } catch(jsonErr) {
-            // If response is not JSON, it means Cloudflare threw an unexpected HTML block
-            if (outputJsonText.includes("blocked") || outputJsonText.includes("Attention Required")) {
-                res.status(403).send(outputJsonText);
-            } else {
-                res.status(500).json({ success: false, error: "Output compilation format mismatch.", raw: outputJsonText });
+        // Execute request INSIDE the authenticated real stealth instance to pass Cloudflare smoothly
+        const result = await page.evaluate(async (url, method, bodyString) => {
+            try {
+                const fetchOptions = { 
+                    method: method, 
+                    credentials: "include",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    }
+                };
+                if (method !== "GET" && bodyString) {
+                    fetchOptions.body = bodyString;
+                }
+                const response = await fetch(url, fetchOptions);
+                const contentType = response.headers.get("content-type") || "";
+                if (contentType.includes("application/json")) {
+                    return { status: response.status, isJson: true, data: await response.json() };
+                } else {
+                    return { status: response.status, isJson: false, data: await response.text() };
+                }
+            } catch (err) {
+                return { status: 500, isJson: true, data: { success: false, error: err.message } };
             }
-        }
+        }, targetUrl, req.method, req.method !== "GET" ? JSON.stringify(req.body) : null);
+
+        if (result.isJson) res.status(result.status).json(result.data);
+        else res.status(result.status).send(result.data);
     } catch (e) {
-        res.status(500).json({ success: false, error: "Cloudflare navigation tunnel failed: " + e.message });
+        console.error("[RangeXCoder Tunnel API Error]", e.message);
+        res.status(500).json({ success: false, error: "Cloudflare stealth tunnel bridge error: " + e.message });
     }
 });
 
-app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Token Tunnel Active on port: ${PORT}`));
+app.listen(PORT, () => console.log(`[RangeXCoder Server] Direct Resilient Stealth Tunnel Active on port: ${PORT}`));
